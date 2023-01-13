@@ -1,0 +1,145 @@
+#include <algorithm>
+#include <iterator>
+#include <ppl.hh>
+#include <stdio.h>
+#include <time.h>
+#include <type_traits>
+#include <vector>
+
+#include "polyhedra.hh"
+
+using namespace Parma_Polyhedra_Library;
+using namespace std;
+
+static Variable x(0);
+static Variable y(1);
+
+void tests();
+void example();
+
+void tests() {
+
+    vector<C_Polyhedron> res;
+
+    C_Polyhedron C(2, EMPTY);
+    C.add_generator(point(4*x + 4*y));
+    C.add_generator(point(2*x + 4*y));
+    C.add_generator(point(1*x + 5*y));
+
+    C_Polyhedron P(2, EMPTY);
+    P.add_generator(point(6*x + 3*y));
+    P.add_generator(point(-5*x + 3*y));
+    P.add_generator(point(-3*x + -4*y));
+    P.add_generator(point(5*x + -3*y));
+
+    C_Polyhedron P1(2, EMPTY);
+    P1.add_generator(point(2*x + 2*y));
+    P1.add_generator(point(1*x + 1*y));
+    P1.add_generator(point(-5*x + 3*y));
+
+    C_Polyhedron P2(2, EMPTY);
+    P2.add_generator(point(2*x + 2*y));
+    P2.add_generator(point(1*x + 1*y));
+    P2.add_generator(point(5*x + -3*y));
+
+    C_Polyhedron P3(2, EMPTY);
+    P3.add_generator(point(-3*x + -4*y));
+    P3.add_generator(point(1*x + 1*y));
+    P3.add_generator(point(-5*x + 3*y));
+
+    C_Polyhedron P4(2, EMPTY);
+    P4.add_generator(point(2*x + 2*y));
+    P4.add_generator(point(6*x + 3*y));
+    P4.add_generator(point(5*x + -3*y));
+
+    vector<C_Polyhedron> P_v;
+    P_v.push_back(P1);
+    P_v.push_back(P2);
+    P_v.push_back(P3);
+    P_v.push_back(P4);
+
+    clock_t start = clock();
+    for (int i = 0; i < 1000; i++) {
+        res = regiondiff(P, P_v.begin(), P_v.end());
+    }
+    clock_t end = clock();
+
+    print_points(res);
+
+    printf("Computed region difference in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    start = clock();
+    bool t1, t2, t3, t4;
+    for (int i = 0; i < 1000; i++) {
+        t1 = intersects(P, P_v);
+        t2 = intersects(P, res);
+        t3 = intersects(P_v[1], res);
+        t4 = intersects(C, res);
+    }
+    end = clock();
+
+    printf("Checked intersection of P and P_v: %d\n", t1);
+    printf("Checked intersection of P and P \\ P_v: %d\n", t2);
+    printf("Checked intersection of P_v[1] and P \\ P_v]: %d\n", t3);
+    printf("Checked intersection of P \\ P_v and C: %d\n", t4);
+    printf("Checked intersection in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000 / 4);
+
+    start = clock();
+    C_Polyhedron res2;
+    for (int i = 0; i < 1000; i++) {
+        res2 = translate_into(C, P);
+    }
+    end = clock();
+
+    print_points(res2);
+
+    printf("Translated C into P in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    start = clock();
+    C_Polyhedron res3;
+    for (int i = 0; i < 1000; i++) {
+        res3 = translate_touching(C, P);
+    }
+    end = clock();
+
+    print_points(res3);
+
+    printf("Translated C touching P in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    start = clock();
+    vector<C_Polyhedron> res4;
+    for (int i = 0; i < 1000; i++) {
+        res4 = translate_touching(C, res);
+    }
+    end = clock();
+
+    print_points(res4);
+
+    printf("Translated C touching P \\ P_v in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    start = clock();
+    vector<C_Polyhedron> res5;
+    for (int i = 0; i < 1000; i++) {
+        res5 = translate_into(C, P_v, P);
+    }
+    end = clock();
+
+    print_points(res5);
+
+    printf("Translated C into P \\ P_v in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+}
+
+int main() {
+    tests();
+
+    return 0;
+
+}
+
+void example() {
+    const int fs = 100;
+    const int n = 2;
+
+    for (int i = 0; i < 100; i++) {
+    }
+}
