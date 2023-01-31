@@ -1,7 +1,5 @@
 using IntervalArithmetic
 
-setrounding(Interval, :fast)
-
 function cpre_sw(Ω::Vector{IntervalBox{M,T}},
               Ω_c::Vector{IntervalBox{M,T}},
               X::IntervalBox{M,T},
