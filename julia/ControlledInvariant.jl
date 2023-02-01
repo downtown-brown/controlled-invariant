@@ -6,7 +6,7 @@ using Polyhedra
 using Plots
 
 using CDDLib
-lib = CDDLib.Library(:exact)
+lib = CDDLib.Library(:float)
 
 #lib = DefaultLibrary{Float64}()
 
@@ -35,6 +35,45 @@ function example_synthetic()
     S = I_infty(Ω, U, ϵ, A, B, phi, psi)
 end
 
+p = nothing
+function example_pendulum_direct(case=1, ϵ=0.001)
+    global p
+    n = 2
+    dt = 0.01
+
+    m = 0.2
+    g = 9.8
+    l = 0.3
+    J = 0.006
+    b = 0.1
+
+    A(x) = [1 dt; m*g*l/J*dt*cos(x[1]) (1 - dt*b/J)]
+    B(x)::Matrix{Float64} = reshape(dt*[0; l/J*cos(x[1])], 2, 1)
+
+    phi(X, x) = IntervalBox([0; m*g*l/J*dt*(sin(X[1]) - cos(x[1])*x[1])])
+    psi(X, U, x) = dt*U[1]*IntervalBox([0; l/J*(cos(X[1]) - cos(x[1]))])
+
+    if case == 1
+        X = IntervalBox(-0.05..0.05, -0.01..0.01)
+        U = IntervalBox(-0.1..0.1)
+    elseif case == 2
+        X = IntervalBox(-(pi)..(pi), -1.0..1.0)
+        U = IntervalBox(-0.1..0.1)
+    elseif case == 3
+        X = IntervalBox(-180..180, -180..180)
+        U = IntervalBox(-1..1)
+    end
+
+    p = ProblemData(A, phi, B, psi, U, ϵ)
+
+    Ω = Vector{IntervalData}([IntervalData(X)])
+
+    S, N, E = I_direct(Ω, p)
+
+    return S
+end
+
+
 function example_pendulum(case=1, ϵ=0.001)
     n = 2
     dt = 0.01
@@ -61,8 +100,6 @@ function example_pendulum(case=1, ϵ=0.001)
         X = IntervalBox(-180..180, -180..180)
         U = (-1..1)
     end
-
-    U_p = i2p(IntervalBox(U))
 
     Ω = [X]
 
@@ -170,7 +207,7 @@ end
 
 function inverted_pendulum_sw(ϵ=0.001)
     n = 2
-    dt = 0.001
+    dt = 0.01
 
     m = 1
     g = 9.81
@@ -189,7 +226,7 @@ function inverted_pendulum_sw(ϵ=0.001)
         push!(f, tmp)
     end
 
-    IntervalBox(-(pi)..(pi), -(pi)..(pi))
+    X = IntervalBox(-(pi)..(pi), -(pi)..(pi))
 
     U_p = i2p(IntervalBox(U))
 
@@ -204,6 +241,126 @@ end
 ################################################################################
 ## Controlled invariant functions with continuous input
 ################################################################################
+struct ProblemData2
+    A::Function
+    Phi::Function
+    B::Function
+    Psi::Function
+    U::IntervalBox
+    U_p::Polyhedron
+    ϵ::Float64
+    ProblemData2(
+        A::Function,
+        Phi::Function,
+        B::Function,
+        Psi::Function,
+        U::IntervalBox,
+        ϵ::Float64
+    ) = new(A, Phi, B, Psi, U, i2p(U), ϵ)
+end
+ProblemData = ProblemData2
+
+mutable struct IntervalData5
+    interval::IntervalBox
+    poly::Polyhedron
+    lchild::Ref{IntervalData5}
+    rchild::Ref{IntervalData5}
+    P_u_over::Polyhedron
+    P_over::Polyhedron
+    invariant::Bool
+    iter::Int64
+    function IntervalData5(x::IntervalBox, p::ProblemData)
+        poly = i2p(x)
+        x_m = mid(x)
+        P_u_over = p.A(x_m)*poly + i2p(p.Phi(x, x_m)) + i2p(p.Psi(x, p.U, x_m))
+        P_over = P_u_over + p.B(x_m)*p.U_p
+        new(x, poly, Ref{IntervalData5}(), Ref{IntervalData5}(), P_u_over, P_over, true, 0)
+    end
+
+end
+IntervalData = IntervalData5
+
+xdbg = nothing
+sdbg = []
+ndbg = []
+edbg = []
+function I_direct(Ω::Vector{IntervalData}, p::ProblemData)
+    global xdbg, sdbg, edbg, ndbg
+    S = Vector{IntervalData}()
+    N = Vector{IntervalData}()
+    E = Vector{IntervalData}()
+    L = Vector{IntervalData}(Ω)
+
+
+    i = 0;
+
+    k = 1;
+    Ω_p = [i2p(o) for o in merge_best_effort([n.interval for n in L])]
+    Nc = reduce(convexhull, Ω_p)
+    Nd = regiondiff(Nc, Ω_p)
+
+
+    while length(L) != 0
+        x = popfirst!(L)
+        if x.iter == k
+            break
+        end
+        xdbg = x
+        sdbg = S
+        ndbg = N
+        edbg = E
+
+        if !intersects(x.P_over, Ω_p)
+            push!(N, x)
+            x.invariant = false
+            k += 1
+            S = Vector{IntervalData}()
+
+            Ω_p = [i2p(o) for o in merge_best_effort([n.interval for n in L])]
+            Nc = reduce(convexhull, Ω_p)
+            Nd = regiondiff(Nc, Ω_p)
+
+        elseif can_translate_into(x.P_u_over, x.P_over, Nc, Nd)
+            push!(S, x)
+            x.iter = k
+            push!(L, x)
+
+        elseif diam(x.interval) < p.ϵ
+            push!(E, x)
+            x.invariant = false
+            k += 1
+            S = Vector{IntervalData}()
+
+            Ω_p = [i2p(o) for o in merge_best_effort([n.interval for n in L])]
+            Nc = reduce(convexhull, Ω_p)
+            Nd = regiondiff(Nc, Ω_p)
+
+        else
+            x₁, x₂ = bisect(x, p)
+            prepend!(L, [x₁])
+            prepend!(L, [x₂])
+        end
+        i += 1;
+        if mod(i, 100) == 0
+            println("considered ", i, " intervals")
+        end
+    end
+
+    println("considered ", i, " intervals")
+
+
+    return (S, N, E)
+end
+
+function IntervalArithmetic.bisect(x::IntervalData, p::ProblemData)
+    l, r = bisect(x.interval, 0.5)
+    x_l = IntervalData(l, p)
+    x.lchild = x_l
+    x_r = IntervalData(r, p)
+    x.rchild = x_r
+    return (x_l, x_r)
+end
+
 k = 1
 """
 Compute an approximation of the one step backward reachable set of Ω, intersected with Ω
@@ -421,9 +578,9 @@ function I_infty(Ω::Vector{IntervalBox{M,T}},
         i += 1
     end
 
-    Us = I_final(Ω, U, ϵ, A, B, phi, psi)
+    #Us = I_final(Ω, U, ϵ, A, B, phi, psi)
 
-    return merge_best_effort(S), Us
+    return merge_best_effort(S)#, Us
 
 end
 
@@ -529,19 +686,20 @@ function i2p(A::IntervalBox{M,T}) where {M,T<:Real}
         tmp = zeros(T, n)
         tmp[i] = -1
         res[i] = HalfSpace(tmp, -A.v[i].lo)
+        tmp = zeros(T, n)
         tmp[i] = 1
         res[n+i] = HalfSpace(tmp, A.v[i].hi)
     end
 
-    return res
+    return polyhedron(hrep(res), lib)
 end
 
 """
-Check if `A` ∩ `B` is empty for polyhedron `A` and union of polyhedra `B`
+Check if `A` ∩ `B` is nonempty for polyhedron `A` and union of polyhedra `B`
 """
 function intersects(A::Polyhedron, B::Vector{<:Polyhedron})
     for B_i in B
-        if volume(A ∩ B_i) > 1e-16
+        if dim(A ∩ B_i) != 0
             return true
         end
     end
@@ -606,7 +764,7 @@ function can_translate_into(C::Polyhedron, C_over::Polyhedron, Nc::Polyhedron, N
     Ndd = Vector{Polyhedron}()
     for n in Nd
         tmp = C_over ∩ n
-        if volume(tmp) > 1e-16
+        if dim(tmp) >= 0
             push!(Ndd, tmp)
         end
     end
@@ -623,7 +781,7 @@ function get_translate_into(C::Polyhedron, C_over::Polyhedron, Nc::Polyhedron, N
     Ndd = Vector{Polyhedron}()
     for n in Nd
         tmp = C_over .∩ n
-        if volume(tmp) > 1e-16
+        if dim(tmp) >= 0
             push!(Ndd, tmp)
         end
     end
@@ -679,9 +837,11 @@ function translate_touching(C::Polyhedron, N::Vector{<:Polyhedron})::Vector{Poly
     return [translate_touching(C, n) for n in N]
 end
 
-
+Pdbg = Nothing
 function ⊂(P::Polyhedron, Q::Vector{T})::Bool where {T<:Polyhedron}
-    if isempty(points(vrep(P)))
+    global Pdbg
+    Pdbg = P
+    if dim(P) < 0
         return true
     end
     if isempty(Q)
@@ -692,19 +852,22 @@ function ⊂(P::Polyhedron, Q::Vector{T})::Bool where {T<:Polyhedron}
 
     nQ = length(Q)
     k = 1
-    #while volume(P ∩ Q[k]) < 1e-16
-        #k += 1
-        #if k > nQ
-            #return false
-        #end
-    #end
+
+    while dim(P ∩ Q[k]) < 0
+        k += 1
+        if k > nQ
+            return false
+        end
+    end
 
     for q_h in halfspaces(hrep(Q[k]))
         S = copy(P)
 
+        d1 = dim(S)
+
         intersect!(S, HalfSpace(-q_h.a, -q_h.β))
 
-        if volume(S) < 1e-16
+        if dim(S) < d1
             continue
         end
 
@@ -736,7 +899,7 @@ function regiondiff(P::T, Q::Vector{T})where {T<:Polyhedron}
     nQ = length(Q)
 
     k = 1
-    while volume(P ∩ Q[k]) < 1e-16
+    while dim(P ∩ Q[k]) == 0
         k += 1
         if k > nQ
             return [P]
@@ -748,7 +911,7 @@ function regiondiff(P::T, Q::Vector{T})where {T<:Polyhedron}
 
         intersect!(S, HalfSpace(-q_h.a, -q_h.β))
 
-        if volume(S) < 1e-16
+        if dim(S) < 2
             continue
         end
 

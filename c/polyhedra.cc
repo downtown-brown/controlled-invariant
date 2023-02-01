@@ -69,6 +69,54 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
     return res;
 }
 
+bool subset(C_Polyhedron P,
+            vector<C_Polyhedron>::iterator curr,
+            vector<C_Polyhedron>::iterator end)
+{
+    vector<C_Polyhedron> res;
+
+    P = C_Polyhedron(P);
+
+    for (;;) {
+
+        auto tmp = C_Polyhedron(P);
+        tmp.intersection_assign(*curr);
+
+        if (tmp.affine_dimension() >= P.affine_dimension()) {
+            break;
+        }
+
+        ++curr;
+
+        if (curr == end) {
+            return false;
+        }
+    }
+
+    auto q_h = curr->constraints();
+
+    for (auto i = q_h.begin(); i != q_h.end(); ++i) {
+        auto tmp = C_Polyhedron(P);
+
+        auto t1 = tmp.affine_dimension();
+        tmp.add_constraint(Constraint(-i->coefficient(x)*x
+                                      - i->coefficient(y)*y
+                                      - i->inhomogeneous_term() >= 0)); // not done
+
+        if (tmp.affine_dimension() <= t1) {
+            continue;
+        }
+
+        if ((curr == end - 1) || subset(tmp, curr + 1, end)) {
+            return false;
+        }
+
+        P.add_constraint(*i);
+    }
+
+    return true;
+}
+
 C_Polyhedron translate_into(C_Polyhedron C, C_Polyhedron N) {
     C_Polyhedron res(2);
     auto N_h = N.constraints();
@@ -164,6 +212,20 @@ vector<C_Polyhedron> translate_touching(C_Polyhedron C, vector<C_Polyhedron> N) 
         res.emplace_back(translate_touching(C, *n));
     }
 
+    return res;
+}
+
+C_Polyhedron operator+(C_Polyhedron a, C_Polyhedron b) {
+    C_Polyhedron res(2, EMPTY);
+    auto V_a = a.generators();
+    auto V_b = b.generators();
+    for (auto v_a = V_a.begin(); v_a != V_a.end(); ++v_a) {
+        for (auto v_b = V_b.begin(); v_b != V_b.end(); ++v_b) {
+            res.add_generator(point((v_a->coefficient(x) + v_b->coefficient(x))*x
+                                    + (v_a->coefficient(y) + v_b->coefficient(y))*y));
+
+        }
+    }
     return res;
 }
 
