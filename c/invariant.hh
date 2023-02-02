@@ -1,41 +1,32 @@
 
 
 #include "polyhedra.hh"
+#include <cstdint>
 #include <ppl.hh>
 #include <type_traits>
 
-struct ProblemData {
-    A,
-    Phi,
-    B,
-    Psi,
-    U,
-    double epsilon
-};
+using namespace std;
+using namespace boost::numeric;
+using namespace interval_lib;
+
+typedef interval<double, policies<save_state<rounded_transc_std<double>>,
+                                  checking_base<double>>> I;
 
 
-void I_approx(vector<Interval> Omega, ProblemData p) {
-    C_Polyhedron c1(2, EMPTY);
-    c1.affine_image(
+typedef struct IntervalData {
+    tuple<I, I> interval;
+    C_Polyhedron poly;
+    C_Polyhedron P_u_over;
+    C_Polyhedron P_over;
+    IntervalData* lchild;
+    IntervalData* rchild;
+    bool invariant;
+    int64_t iter;
+    IntervalData(tuple<I, I> interval);
+} IntervalData;
 
-    vector<double> L;
-    while (!L.empty()) {
+void I_approx(vector<IntervalData> Omega);
 
-        auto x = L.back();
-        L.pop_back();
+pair<IntervalData, IntervalData> bisect(IntervalData x);
 
-        auto x_p = i2p(x);
-
-        if (!intersects(image_over, Omega_p)) {
-            N.push_back(x);
-        } else if (can_translate_into(image_poly, image_over)) {
-            S.push_back(x);
-        } else if (diam(x) < p.epsilon) {
-            E.push_back(x);
-        } else {
-            auto xs = bisect(x);
-            L.push_back(xs[0]);
-            L.push_back(xs[1]);
-        }
-    }
-}
+double width(tuple<I, I> interval);

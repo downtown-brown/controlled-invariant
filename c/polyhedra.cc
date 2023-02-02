@@ -9,10 +9,17 @@
 #include <type_traits>
 #include <vector>
 
+#include <boost/numeric/interval.hpp>
 #include "polyhedra.hh"
+
 
 using namespace Parma_Polyhedra_Library;
 using namespace std;
+using namespace boost::numeric;
+using namespace interval_lib;
+
+typedef interval<double, policies<save_state<rounded_transc_std<double>>,
+                                  checking_base<double>>> I;
 
 static Variable x(0);
 static Variable y(1);
@@ -256,4 +263,84 @@ bool intersects(C_Polyhedron A, vector<C_Polyhedron> B) {
     }
 
     return false;
+}
+
+bool can_translate_into(C_Polyhedron P,
+                        C_Polyhedron P_over,
+                        C_Polyhedron Nc,
+                        vector<C_Polyhedron> Nd) {
+    auto Ncc = C_Polyhedron(Nc);
+    Ncc.intersection_assign(P_over);
+
+    vector<C_Polyhedron> Ndd;
+    for (auto d = Nd.begin(); d != Nd.end(); ++d) {
+        auto tmp = C_Polyhedron(*d);
+        tmp.intersection_assign(P_over);
+
+        if (!tmp.is_empty()) {
+            Ndd.push_back(tmp);
+        }
+    }
+
+    auto U1 = translate_into(P, Ncc);
+    auto U2 = translate_touching(P, Ndd);
+
+    return subset(U1, U2.begin(), U2.end());
+}
+
+C_Polyhedron i2p(tuple<I, I> x_int) {
+
+    int64_t nl0, dl0;
+    rat_approx(get<0>(x_int).lower(), INT32_MAX, &nl0, &dl0);
+    int64_t nl1, dl1;
+    rat_approx(get<1>(x_int).lower(), INT32_MAX, &nl1, &dl1);
+    int64_t nu0, du0;
+    rat_approx(get<0>(x_int).upper(), INT32_MAX, &nu0, &du0);
+    int64_t nu1, du1;
+    rat_approx(get<1>(x_int).upper(), INT32_MAX, &nu1, &du1);
+
+    C_Polyhedron res(2, EMPTY);
+    res.add_generator(point((nl0*dl1)*x + (nl1*dl0)*y, dl0*dl1));
+    res.add_generator(point((nl0*du1)*x + (nu1*dl0)*y, dl0*du1));
+    res.add_generator(point((nu0*dl1)*x + (nl1*du0)*y, du0*dl1));
+    res.add_generator(point((nu0*du1)*x + (nu1*du0)*y, du0*du1));
+
+    return res;
+}
+
+void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom)
+{
+	/*  a: continued fraction coefficients. */
+	int64_t a, h[3] = { 0, 1, 0 }, k[3] = { 1, 0, 0 };
+	int64_t x, d, n = 1;
+	int i, neg = 0;
+
+	if (md <= 1) { *denom = 1; *num = (int64_t) f; return; }
+
+	if (f < 0) { neg = 1; f = -f; }
+
+	while (f != floor(f)) { n <<= 1; f *= 2; }
+	d = f;
+
+	/* continued fraction and check denominator each step */
+	for (i = 0; i < 64; i++) {
+		a = n ? d / n : 0;
+		if (i && !a) break;
+
+		x = d; d = n; n = x % n;
+
+		x = a;
+		if (k[1] * a + k[0] >= md) {
+			x = (md - k[0]) / k[1];
+			if (x * 2 >= a || k[1] >= md)
+				i = 65;
+			else
+				break;
+		}
+
+		h[2] = x * h[1] + h[0]; h[0] = h[1]; h[1] = h[2];
+		k[2] = x * k[1] + k[0]; k[0] = k[1]; k[1] = k[2];
+	}
+	*denom = k[1];
+	*num = neg ? -h[1] : h[1];
 }

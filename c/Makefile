@@ -4,6 +4,7 @@ CFLAGS=-O3
 OBJECTS = \
 	main.o \
 	polyhedra.o \
+	invariant.o \
 
 %.o: %.cc
 	$(CC) -c -o $@ $< $(CFLAGS)

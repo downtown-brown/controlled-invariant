@@ -11,6 +11,11 @@
 
 using namespace Parma_Polyhedra_Library;
 using namespace std;
+using namespace boost::numeric;
+using namespace interval_lib;
+
+typedef interval<double, policies<save_state<rounded_transc_std<double>>,
+                                  checking_base<double>>> I;
 
 static Variable x(0);
 static Variable y(1);
@@ -148,6 +153,27 @@ void tests() {
     print_points(res6);
 
     printf("Added C to P in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    start = clock();
+    bool res7;
+    for (int i = 0; i < 1000; i++) {
+        res7 = can_translate_into(C, P, P, P_v);
+    }
+    end = clock();
+
+    printf("Translated C to P \\ P_v: %d in %.15f seconds\n\n",res7, (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    tuple<I, I> x = {I(0.1,0.2), I(-0.1, 0.3)};
+
+    C_Polyhedron res8;
+    start = clock();
+    for (int i = 0; i < 1000; i++) {
+        res8 = i2p(x);
+    }
+    end = clock();
+    print_points(res8);
+
+    printf("i2p in %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
 }
 
 int main() {
