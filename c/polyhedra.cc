@@ -344,3 +344,17 @@ void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom)
 	*denom = k[1];
 	*num = neg ? -h[1] : h[1];
 }
+
+C_Polyhedron convexhull(vector<C_Polyhedron> P_v) {
+    C_Polyhedron res(2, EMPTY);
+
+    for (auto P = P_v.begin(); P != P_v.end(); ++P) {
+        //auto v = P->generators();
+        //for (auto p = v.begin(); p != v.end(); ++p) {
+        //res.add_generator(*p);
+        //}
+        res.add_generators(P->generators());
+    }
+
+    return C_Polyhedron(res.minimized_generators());
+}

@@ -39,3 +39,6 @@ C_Polyhedron operator+(C_Polyhedron a, C_Polyhedron b);
 
 C_Polyhedron i2p(tuple<I, I> x_int);
 void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom);
+
+
+C_Polyhedron convexhull(vector<C_Polyhedron> P_v);

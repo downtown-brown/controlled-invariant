@@ -13,9 +13,13 @@ void I_approx(vector<IntervalData> Omega) {
     vector<IntervalData> E;
     vector<IntervalData> L;
 
-    vector<C_Polyhedron> Omega_p;
-    C_Polyhedron Nc;
-    vector<C_Polyhedron> Nd;
+    auto len = Omega.size();
+    vector<C_Polyhedron> Omega_p(len);
+    for (int i = 0; i < len; i++) {
+        Omega_p[i] = Omega[i].poly;
+    }
+    auto Nc = convexhull(Omega_p);
+    auto Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
 
     while (!L.empty()) {
 
@@ -86,18 +90,15 @@ array<double, 2> midpoint(tuple<I, I> interval) {
             median(get<1>(interval))};
 }
 
-array<array<int64_t, 2>, 2> A(array<double, 2> x) {
-    return {{100, 1}, {1, 100}};
+array<int64_t, 4> A(array<double, 2> x) {
+    return {{100, 1, 1, 100}};
 }
-
-array<int64_t, 2> B(array<double, 2> x) {
+ array<int64_t, 2> B(array<double, 2> x) {
     return {100*(1-mu)*x[0], 4*(1-mu)*x[1]}
 }
-
-tuple<I, I> Phi(tuple<I, I> X, array<double, 2> x) {
+ tuple<I, I> Phi(tuple<I, I> X, array<double, 2> x) {
     return {I(0,0), I(0,0)}
 }
-
-tuple<I, I> Psi(tuple<I, I> X, array<double, 2> x, I u) {
+ tuple<I, I> Psi(tuple<I, I> X, array<double, 2> x, I u) {
     return {I(0,0), I(0,0)}
 }

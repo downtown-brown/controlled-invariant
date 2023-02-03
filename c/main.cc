@@ -174,6 +174,16 @@ void tests() {
     print_points(res8);
 
     printf("i2p in %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    C_Polyhedron res9;
+    start = clock();
+    for (int i = 0; i < 1000; i++) {
+        res9 = convexhull(P_v);
+    }
+    end = clock();
+    print_points(res9);
+
+    printf("Computed convex hull of P_v in %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
 }
 
 int main() {
