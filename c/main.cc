@@ -1,4 +1,5 @@
 #include <algorithm>
+#include <cstdint>
 #include <iterator>
 #include <ppl.hh>
 #include <stdio.h>
@@ -8,6 +9,7 @@
 #include <boost/numeric/interval.hpp>
 
 #include "polyhedra.hh"
+#include "invariant.hh"
 
 using namespace Parma_Polyhedra_Library;
 using namespace std;
@@ -19,6 +21,8 @@ typedef interval<double, policies<save_state<rounded_transc_std<double>>,
 
 static Variable x(0);
 static Variable y(1);
+
+uint8_t stop = 0;
 
 void tests();
 void example();
@@ -189,7 +193,33 @@ void tests() {
 int main() {
     tests();
 
+    IntervalData Omega({I(-0.05, 0.05), I(-0.01, 0.01)});
 
+    auto start = clock();
+    vector<IntervalData> res;
+    uint64_t ii = 0;
+    while (!stop) {
+        if (ii == 0) {
+            res = I_approx({Omega});
+        } else {
+            res = I_approx(res);
+        }
+        ii++;
+    }
+    auto end = clock();
+    printf("Computed %ld iters I_approx %.10f seconds\n\n", ii, (double)(end - start)/CLOCKS_PER_SEC);
+
+    print_points(res);
+
+    cout << res.size() << endl;
+
+    cout << "inputs:\n";
+    auto U = U_approx(res);
+    for (auto i = U.begin(); i!=U.end(); ++i) {
+        cout << "{";
+        print_points(*i);
+        cout << "}\n";
+    }
 
     return 0;
 

@@ -151,9 +151,9 @@ function example_pendulum_sw(ϵ=0.001)
 
     X = IntervalBox(-0.05..0.05, -0.01..0.01)
 
-    X = IntervalBox(-(pi)..(pi), -(pi)..(pi))
+    #X = IntervalBox(-(pi)..(pi), -(pi)..(pi))
 
-    U = range(-0.5,stop=0.5,step=0.05)
+    U = range(-0.1,stop=0.1,step=0.02)
 
     f = Vector{Function}()
     for u in U
@@ -366,7 +366,6 @@ k = 1
 Compute an approximation of the one step backward reachable set of Ω, intersected with Ω
 """
 a = []
-b = []
 c = []
 cs = []
 ds = []
@@ -392,10 +391,6 @@ function I_approx(Ω::Vector{IntervalBox{M,T}},
 
     Nc = reduce(convexhull, Ω_p)
     Nd = regiondiff(Nc, Ω_p)
-
-    push!(a, Ω_p)
-    push!(b, Nc)
-    push!(c, Nd)
 
     while length(L) != 0
         x = popfirst!(L)
@@ -592,6 +587,7 @@ end
 Compute an approximation of the I operator for switched systems
 """
 kk = 1
+jj = 0
 function I_sw(Ω::Vector{IntervalBox{M,T}},
               Ω_c::Vector{IntervalBox{M,T}},
               X::IntervalBox{M,T},
@@ -599,6 +595,7 @@ function I_sw(Ω::Vector{IntervalBox{M,T}},
               ϵ::T) where {M,T<:Real}
 
     global kk
+    global jj
 
     S = Vector{IntervalBox{M,T}}()
     N = Vector{IntervalBox{M,T}}()
@@ -623,6 +620,7 @@ function I_sw(Ω::Vector{IntervalBox{M,T}},
             push!(L, x₂)
         end
         i += 1;
+        jj += 1;
     end
 
     println("Considered ", i, " intervals")
@@ -647,6 +645,7 @@ function I_infty_sw(Ω::Vector{IntervalBox{M,T}},
             Ω_c::Vector{IntervalBox{M,T}},
             f::Vector{Function},
             ϵ::T) where {M,T<:Real}
+    global jj
 
     X = IntervalBox(Ω[1])
     Y_c = Vector{IntervalBox{M,T}}(Ω_c)
@@ -666,6 +665,9 @@ function I_infty_sw(Ω::Vector{IntervalBox{M,T}},
         Ω = S
         i += 1
     end
+
+    println("Outer iterations", i)
+    println("inner iterations", jj)
 
     return (S, Y_c)
 

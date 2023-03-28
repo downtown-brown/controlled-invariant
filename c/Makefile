@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-O3
+CFLAGS=-g
 
 OBJECTS = \
 	main.o \
@@ -13,4 +13,4 @@ debug: $(OBJECTS)
 	$(CC) -o polygons $(OBJECTS) -lppl -lgmp
 
 polygons: $(OBJECTS)
-	$(CC) -o polygons $(OBJECTS) -lppl -lgmp
+	$(CC) -o polygons $(OBJECTS) -lppl -lgmp -O3
