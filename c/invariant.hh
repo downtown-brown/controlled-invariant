@@ -21,9 +21,11 @@ typedef struct IntervalData {
     bool invariant;
     int64_t iter;
     IntervalData(tuple<I, I> interval);
+    uint32_t checked;
 } IntervalData;
 
 vector<IntervalData> I_approx(vector<IntervalData> Omega);
+vector<IntervalData> I_accel(vector<IntervalData> Omega);
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 

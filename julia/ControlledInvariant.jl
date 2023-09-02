@@ -153,7 +153,7 @@ function example_pendulum_sw(ϵ=0.001)
 
     #X = IntervalBox(-(pi)..(pi), -(pi)..(pi))
 
-    U = range(-0.1,stop=0.1,step=0.02)
+    U = range(-0.1,stop=0.1,step=0.002)
 
     f = Vector{Function}()
     for u in U
@@ -1039,4 +1039,16 @@ function lt(A::IntervalBox{M, T}, B::IntervalBox{M, T}) where {M, T<:Real}
         end
     end
     return true
+end
+
+function area(A::IntervalBox{M, T}) where {M, T<:Real}
+    (A[1].hi - A[1].lo)*(A[2].hi - A[2].lo)
+end
+
+function area(A::Vector{IntervalBox{M, T}}) where {M, T<:Real}
+    ar = 0
+    for a in A
+        ar += area(a)
+    end
+    return ar
 end

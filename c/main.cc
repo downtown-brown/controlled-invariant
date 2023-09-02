@@ -221,6 +221,13 @@ int main() {
         cout << "}\n";
     }
 
+    start = clock();
+    auto res2 = I_accel({Omega});
+    end = clock();
+    printf("Computed I_accel %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC);
+
+    cout << res.size() << endl;
+
     return 0;
 
 }

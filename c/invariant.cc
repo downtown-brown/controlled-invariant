@@ -42,6 +42,99 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
     return U;
 }
 
+vector<IntervalData> I_accel(vector<IntervalData> Omega) {
+    uint64_t num_int = 0;
+    vector<IntervalData> S;
+    vector<IntervalData> N;
+    vector<IntervalData> E;
+    deque<IntervalData> L;
+
+    uint32_t j = 0;
+
+    move(
+         begin(Omega),
+         end(Omega),
+         back_inserter(L)
+    );
+
+    auto len = L.size();
+    vector<C_Polyhedron> L_p(len);
+    for (int i = 0; i < len; i++) {
+        L_p[i] = L[i].poly;
+    }
+    auto Nc = convexhull(L_p);
+    auto Nd = regiondiff(Nc, L_p.begin(), L_p.end());
+
+    while (1) {
+
+        auto x = L.front();
+        L.pop_front();
+        num_int++;
+
+        // cout << "Considering x: " << endl;
+        // print_points(x.poly);
+        // print_points(x.P_over);
+        // print_points(x.P_u_over);
+        // print_points(Nc);
+        // print_points(Nd);
+
+
+        if (!intersects(x.P_over, L_p)) {
+            //cout << "Putting in N\n";
+            //print_points(x.P_over);
+            //print_points(x.P_over);
+            N.push_back(x);
+            Nd.push_back(x.poly);
+            j++;
+        } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
+            //cout << "Putting in S\n";
+            x.checked = j;
+            L.push_back(x);
+        } else if (width(x.interval) < epsilon) {
+            //cout << "Putting in E, width = " << width(x.interval) << endl;
+            E.push_back(x);
+            Nd.push_back(x.poly);
+            j++;
+        } else {
+            // cout << "Bisecting\n";
+            auto xs = bisect(x);
+            L.push_front(get<0>(xs));
+            L.push_front(get<1>(xs));
+        }
+
+        uint8_t stop = 1;
+        for (auto i = L.begin(); i != L.end(); ++i) {
+            if (i->checked != j)
+                stop = 0;
+        }
+
+        if (stop)
+            break;
+    }
+
+
+    move(
+         begin(L),
+         end(L),
+         back_inserter(S)
+    );
+
+    cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << endl;
+    fprint_points(N, "n" + to_string(kk) + ".txt");
+    fprint_points(E, "e" + to_string(kk) + ".txt");
+    fprint_points(S, "s" + to_string(kk) + ".txt");
+
+    kk++;
+    //cout << "Over\n";
+    //print_over(S);
+
+    stop = N.empty() && E.empty();
+
+    cout << "considered " << num_int << " intervals\n";
+
+    return S;
+}
+
 vector<IntervalData> I_approx(vector<IntervalData> Omega) {
     uint64_t num_int = 0;
     vector<IntervalData> S;
