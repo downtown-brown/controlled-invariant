@@ -14,7 +14,7 @@ for i = 1:size(S,1)
 plot(S{i}.mptPolytope.P, 'color', [0 0.4470 0.7410]);
 end
 
-l = legend('Algs 2, 3, \& [9] $n_u=1000$', '[9] $n_u=10$');
+l = legend('Algs 2, 3, \& [8] $n_u=1000$', '[8] $n_u=10$');
 l.Location = 'northoutside';
 xlabel('$x_1$')
 ylabel('$x_2$')
