@@ -7,12 +7,12 @@
 #include <vector>
 
 using namespace std;
-#define epsilon 1e-3
+#define epsilon 3e-2
 
 extern uint8_t stop;
 
 uint64_t kk = 0;
-I U(-0.1, 0.1);
+I U(-2, 2);
 
 vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
     uint64_t num_int = 0;
@@ -283,12 +283,13 @@ IntervalData::IntervalData(tuple<I, I> x) {
     iter = 0;
 }
 
-#define mu 0.5
 array<double, 2> midpoint(tuple<I, I> interval) {
     return {median(get<0>(interval)),
             median(get<1>(interval))};
 }
 
+/*
+#define mu 0.5
 #define dt 0.01
 #define m 0.2
 #define g 9.8
@@ -348,4 +349,61 @@ tuple<I, I> Phi(tuple<I, I> X, array<double, 2> x) {
 tuple<I, I> Psi(tuple<I, I> X, array<double, 2> x, I U) {
     I Psi2 = U*dt*l/J*(cos(get<0>(X)) - cos(x[0]));
     return {I(0,0), Psi2};
+}
+*/
+
+
+
+C_Polyhedron A(array<double, 2> x, C_Polyhedron P) {
+    auto res = C_Polyhedron(P);
+    const int64_t A1_num = 10-1;
+    const int64_t A1_den = 10;
+    const int64_t A2_num = 2;
+    const int64_t A2_den = 1;
+    const int64_t A3_num = 10-3;
+    const int64_t A3_den = 10;
+    const int64_t A4_num = 4;
+    const int64_t A4_den = 1;
+
+    static int64_t A1 = A1_num*A2_den*A3_den*A4_den;
+    static int64_t A2 = A1_den*A2_num*A3_den*A4_den;
+    static int64_t A3 = A1_den*A2_den*A3_num*A4_den;
+    static int64_t A4 = A1_den*A2_den*A3_den*A4_num;
+    static int64_t den = A1_den*A2_den*A3_den*A4_den;
+
+    res.affine_image(Variable(0), A1*Variable(0) + A2*Variable(1), den);
+
+    res.affine_image(Variable(1), den*A3*Variable(0) + (A1*A4 - A2*A3)*Variable(1), A1*den);
+    return res;
+}
+
+C_Polyhedron B(array<double, 2> x, I U) {
+    const int64_t B1_num = 0;
+    const int64_t B1_den = 10;
+    const int64_t B2_num = -2;
+    const int64_t B2_den = 10;
+
+    static uint8_t i = 0;
+    static int64_t nl0, dl0;
+    static int64_t nu0, du0;
+    if (!i) {
+        rat_approx(U.lower(), INT32_MAX, &nl0, &dl0);
+        rat_approx(U.upper(), INT32_MAX, &nu0, &du0);
+        i = 1;
+    }
+
+    C_Polyhedron res(2, EMPTY);
+    res.add_generator(point(B1_num*nl0*Variable(0) + B2_num*nl0*Variable(1), dl0*B2_den));
+    res.add_generator(point(B1_num*nu0*Variable(0) + B2_num*nu0*Variable(1), du0*B2_den));
+
+    return res;
+}
+
+tuple<I, I> Phi(tuple<I, I> X, array<double, 2> x) {
+    I Phi2 = -0.25*pow(x[1],3)/10;
+    return {I(0,0), Phi2};
+}
+
+tuple<I, I> Psi(tuple<I, I> X, array<double, 2> x, I U) {
+    return {I(0,0), I(0,0)};
 }

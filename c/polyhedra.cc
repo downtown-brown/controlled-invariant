@@ -262,7 +262,7 @@ void print_points(C_Polyhedron P) {
 
 void fprint_points(C_Polyhedron P, string fname) {
     auto gs = P.generators();
-    ofstream f(fname, ios_base::app);
+    ofstream f(fname);
     f << "[";
     for (auto g = gs.begin(); g != gs.end(); ++g) {
         if (g->is_point()) {

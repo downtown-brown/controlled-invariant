@@ -24,9 +24,6 @@ static Variable y(1);
 
 uint8_t stop = 0;
 
-void tests();
-void example();
-
 void tests() {
 
     vector<C_Polyhedron> res;
@@ -193,7 +190,7 @@ void tests() {
 int main() {
     tests();
 
-    IntervalData Omega({I(-0.05, 0.05), I(-0.01, 0.01)});
+    IntervalData Omega({I(-4, 4), I(-2, 2)});
 
     auto start = clock();
     vector<IntervalData> res;
@@ -209,9 +206,11 @@ int main() {
     auto end = clock();
     printf("Computed %ld iters I_approx %.10f seconds\n\n", ii, (double)(end - start)/CLOCKS_PER_SEC);
 
+    /*
     print_points(res);
 
     cout << res.size() << endl;
+
 
     cout << "inputs:\n";
     auto U = U_approx(res);
@@ -220,7 +219,7 @@ int main() {
         print_points(*i);
         cout << "}\n";
     }
-
+    */
     start = clock();
     auto res2 = I_accel({Omega});
     end = clock();
@@ -230,14 +229,4 @@ int main() {
 
     return 0;
 
-}
-
-
-
-void example() {
-    const int fs = 100;
-    const int n = 2;
-
-    for (int i = 0; i < 100; i++) {
-    }
 }

@@ -1,4 +1,5 @@
 C = Polyhedron([2 2;0 2; -1 2.5]) + [2;1];
+Q = Polyhedron([2 2;1 1; -5 3; -4 1]);
 P(1) = Polyhedron([2 2;1 1; -5 3]); 
 P(2) = Polyhedron([2 2;1 1; 5 -3]); 
 P(3) = Polyhedron([-3 -4;1 1; -5 3]);
