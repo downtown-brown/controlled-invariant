@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-O3
+CFLAGS=-O3 -Ofast -Wall -Werror
 
 SRCDIR=src
 OBJDIR=obj

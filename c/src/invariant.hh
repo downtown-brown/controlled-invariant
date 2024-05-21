@@ -1,7 +1,10 @@
 #include "polyhedra.hh"
+#include <cstdint>
 #include <stdint.h>
 #include <ppl.hh>
 #include <type_traits>
+
+#define DATADIR (string)"data/"
 
 using namespace std;
 using namespace boost::numeric;

@@ -32,7 +32,7 @@ vector<C_Polyhedron> translate_into(C_Polyhedron P,
                                     vector<C_Polyhedron> Nd);
 void print_points(vector<C_Polyhedron> P);
 void fprint_points(vector<C_Polyhedron> P, string fname);
-void fprint_points(C_Polyhedron P, string fname);
+void fprint_points(C_Polyhedron P, string fname, bool append);
 void print_points(C_Polyhedron P);
 bool intersects(C_Polyhedron A, vector<C_Polyhedron> B);
 

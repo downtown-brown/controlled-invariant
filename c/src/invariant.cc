@@ -23,7 +23,7 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
-    for (int i = 0; i < len; i++) {
+    for (uint64_t i = 0; i < len; i++) {
         Omega_p[i] = Omega[i].poly;
     }
     auto Nc = convexhull(Omega_p);
@@ -59,7 +59,7 @@ vector<IntervalData> I_accel(vector<IntervalData> Omega) {
 
     auto len = L.size();
     vector<C_Polyhedron> L_p(len);
-    for (int i = 0; i < len; i++) {
+    for (uint64_t i = 0; i < len; i++) {
         L_p[i] = L[i].poly;
     }
     auto Nc = convexhull(L_p);
@@ -120,9 +120,9 @@ vector<IntervalData> I_accel(vector<IntervalData> Omega) {
     );
 
     cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << endl;
-    fprint_points(N, "n" + to_string(kk) + ".txt");
-    fprint_points(E, "e" + to_string(kk) + ".txt");
-    fprint_points(S, "s" + to_string(kk) + ".txt");
+    fprint_points(N, DATADIR + "n" + to_string(kk) + ".txt");
+    fprint_points(E, DATADIR + "e" + to_string(kk) + ".txt");
+    fprint_points(S, DATADIR + "s" + to_string(kk) + ".txt");
 
     kk++;
     //cout << "Over\n";
@@ -144,7 +144,7 @@ vector<IntervalData> I_approx(vector<IntervalData> Omega) {
 
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
-    for (int i = 0; i < len; i++) {
+    for (uint64_t i = 0; i < len; i++) {
         Omega_p[i] = Omega[i].poly;
     }
     auto Nc = convexhull(Omega_p);
@@ -184,9 +184,9 @@ vector<IntervalData> I_approx(vector<IntervalData> Omega) {
     }
 
     cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << endl;
-    fprint_points(N, "n" + to_string(kk) + ".txt");
-    fprint_points(E, "e" + to_string(kk) + ".txt");
-    fprint_points(S, "s" + to_string(kk) + ".txt");
+    fprint_points(N, DATADIR + "n" + to_string(kk) + ".txt");
+    fprint_points(E, DATADIR + "e" + to_string(kk) + ".txt");
+    fprint_points(S, DATADIR + "s" + to_string(kk) + ".txt");
 
     kk++;
     //cout << "Over\n";
@@ -207,8 +207,10 @@ void print_points(vector<IntervalData> P) {
 }
 
 void fprint_points(vector<IntervalData> P, string fname) {
+    bool append = false;
     for (auto p = P.begin(); p != P.end(); ++p) {
-        fprint_points(p->poly, fname);
+        fprint_points(p->poly, fname, append);
+        append = true;
     }
 }
 
@@ -230,7 +232,6 @@ pair<IntervalData, IntervalData> bisect(IntervalData x) {
     tuple<I, I> l;
     tuple<I, I> r;
     I tmp2;
-    uint8_t dim;
     if (width(get<0>(x.interval)) >= width(get<1>(x.interval))) {
         tmp = bisect(get<0>(x.interval));
         tmp2 = get<1>(x.interval);
@@ -379,7 +380,7 @@ C_Polyhedron A(array<double, 2> x, C_Polyhedron P) {
 
 C_Polyhedron B(array<double, 2> x, I U) {
     const int64_t B1_num = 0;
-    const int64_t B1_den = 10;
+    //const int64_t B1_den = 1;
     const int64_t B2_num = -2;
     const int64_t B2_den = 10;
 

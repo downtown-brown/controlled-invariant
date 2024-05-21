@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstdint>
 #include <fstream>
+#include <ios>
 #include <iterator>
 #include <ppl.hh>
 #include <stdio.h>
@@ -260,9 +261,15 @@ void print_points(C_Polyhedron P) {
     cout << "\b\b]\n\n";
 }
 
-void fprint_points(C_Polyhedron P, string fname) {
+void fprint_points(C_Polyhedron P, string fname, bool append) {
     auto gs = P.generators();
-    ofstream f(fname);
+    ofstream f;
+    if (append) {
+        f.open(fname, ios_base::app);
+    } else {
+        f.open(fname);
+    }
+
     f << "[";
     for (auto g = gs.begin(); g != gs.end(); ++g) {
         if (g->is_point()) {
@@ -282,8 +289,10 @@ void print_points(vector<C_Polyhedron> P) {
     }
 }
 void fprint_points(vector<C_Polyhedron> P, string fname) {
+    bool append = false;
     for (auto p = P.begin(); p != P.end(); ++p) {
-        fprint_points(*p, fname);
+        fprint_points(*p, fname, append);
+        append = true;
     }
 }
 

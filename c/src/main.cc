@@ -76,9 +76,8 @@ void tests() {
     printf("Computed region difference in %.15f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
 
     start = clock();
-    bool res10;
     for (int i = 0; i < 1000; i++) {
-        res10 = subset(P, P_v.begin(), P_v.end());
+        subset(P, P_v.begin(), P_v.end());
     }
     end = clock();
 
@@ -219,13 +218,13 @@ int main() {
         print_points(*i);
         cout << "}\n";
     }
-    */
     start = clock();
     auto res2 = I_accel({Omega});
     end = clock();
     printf("Computed I_accel %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC);
 
     cout << res.size() << endl;
+    */
 
     return 0;
 
