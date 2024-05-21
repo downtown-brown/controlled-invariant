@@ -3,16 +3,26 @@ CFLAGS=-O3
 
 SRCDIR=src
 OBJDIR=obj
-BINDIR=.
+DATADIR=data
 
-EXE=$(BINDIR)/polygons
+EXE=invariant
 
 SRC=$(wildcard $(SRCDIR)/*.cc)
 OBJ=$(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.cc
-	$(CC) $(CFLAGS) -c $< -o $@
+.PHONY: all clean
 
-$(EXE): $(OBJ)
+all: $(EXE)
+
+$(EXE): $(OBJ) | $(DATADIR)
 	echo $(OBJ)
 	$(CC) $^ -lppl -lgmp -o $@
+
+$(OBJDIR)/%.o: $(SRCDIR)/%.cc | $(OBJDIR)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(OBJDIR) $(DATADIR):
+	mkdir -p $@
+
+clean:
+	@rm -rv $(OBJDIR)
