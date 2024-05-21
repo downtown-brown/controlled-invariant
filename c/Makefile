@@ -1,16 +1,18 @@
 CC=g++
-CFLAGS=-g
+CFLAGS=-O3
 
-OBJECTS = \
-	main.o \
-	polyhedra.o \
-	invariant.o \
+SRCDIR=src
+OBJDIR=obj
+BINDIR=.
 
-%.o: %.cc
-	$(CC) -c -o $@ $< $(CFLAGS)
+EXE=$(BINDIR)/polygons
 
-debug: $(OBJECTS)
-	$(CC) -o polygons $(OBJECTS) -lppl -lgmp
+SRC=$(wildcard $(SRCDIR)/*.cc)
+OBJ=$(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 
-polygons: $(OBJECTS)
-	$(CC) -o polygons $(OBJECTS) -lppl -lgmp -O3
+$(OBJDIR)/%.o: $(SRCDIR)/%.cc
+	$(CC) $(CFLAGS) -c $< -o $@
+
+$(EXE): $(OBJ)
+	echo $(OBJ)
+	$(CC) $^ -lppl -lgmp -o $@
