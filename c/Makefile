@@ -15,7 +15,6 @@ OBJ=$(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 all: $(EXE)
 
 $(EXE): $(OBJ) | $(DATADIR)
-	echo $(OBJ)
 	$(CC) $^ -lppl -lgmp -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cc | $(OBJDIR)

@@ -1,7 +1,7 @@
 close all
 
-P = Polyhedron([0 0;2 1; 1 2]);
-Q = Polyhedron([4 0; 8 6; 2 4]); 
+P = Polyhedron([7 0;9 1; 8 2]);
+Q = Polyhedron([2 0; 6 6; 0 4]); 
 
 figure(1)
 plot(P, 'color', 'cyan')
@@ -23,16 +23,36 @@ Oi = intersect(O(1),O(2));
 
 figure(4)
 plot(Oi)
-
-figure(3)
+hold on
 plot(I,'color','green')
-
-figure(2)
+plot(P + Oi,'color','magenta')
 plot(Q,'color','yellow')
-hold on
-plot(P + I,'color','cyan')
+plot(P + I,'color','orange')
+plot(P, 'color', 'cyan')
 
-figure(12)
-plot(P + Oi,'color','cyan')
-hold on
-plot(Q,'color','yellow')
+save_vertices(P, 'P.txt')
+save_vertices(Q, 'Q.txt')
+save_vertices(I, 'I.txt')
+save_vertices(Oi, 'O.txt')
+save_vertices(P+I, 'P_I.txt')
+save_vertices(P+Oi, 'P_O.txt')
+
+
+function res = clockwise_vertices(P)
+    P.minVRep;
+    V = P.V;
+
+    center = mean(V);
+
+    angles = atan2(V(:,1)-center(1), V(:,2)-center(2));
+
+    [~, perm] = sort(angles);
+
+    res = V(perm,:);
+
+end
+
+function save_vertices(P, name)
+    V = round(clockwise_vertices(P), 3);
+    writematrix(V, name, 'Delimiter', ' ')
+end
