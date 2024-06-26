@@ -24,7 +24,7 @@ vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega) {
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
     int i = 0;
-    for (auto O : Omega) {
+    for (const auto& O : Omega) {
         Omega_p[i] = O.poly;
         i++;
     }
@@ -105,7 +105,7 @@ list<IntervalData> I_accel(const list<IntervalData>& Omega) {
         }
 
         uint8_t stop = 1;
-        for (auto i : L) {
+        for (const auto& i : L) {
             if (i.checked != j)
                 stop = 0;
         }
@@ -147,7 +147,7 @@ list<IntervalData> I_approx(const list<IntervalData>& Omega) {
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
     int i = 0;
-    for (auto O : Omega) {
+    for (const auto& O : Omega) {
         Omega_p[i] = O.poly;
         i++;
     }

@@ -48,7 +48,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
         }
     }
 
-    for (auto i : curr->constraints()) {
+    for (const auto& i : curr->constraints()) {
         auto tmp = C_Polyhedron(P);
 
         tmp.add_constraint(Constraint(-i.coefficient(x)*x
@@ -98,7 +98,7 @@ bool subset(C_Polyhedron P,
     }
 
 
-    for (auto i : curr->constraints()) {
+    for (const auto& i : curr->constraints()) {
         auto tmp = C_Polyhedron(P);
 
         tmp.add_constraint(Constraint(-i.coefficient(x)*x
@@ -122,12 +122,12 @@ bool subset(C_Polyhedron P,
 }
 
 C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
-    C_Polyhedron res(2, EMPTY);
-    for (auto n : N.constraints()) {
+    C_Polyhedron res(2);
+    for (const auto& n : N.constraints()) {
         GMP_Integer min = 0;
         GMP_Integer mind = 1;
         GMP_Integer d;
-        for (auto c : C.generators()) {
+        for (const auto& c : C.generators()) {
             GMP_Integer tmp = n.coefficient(x)*c.coefficient(x)
                 + n.coefficient(y)*c.coefficient(y);
 
@@ -163,10 +163,10 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     GMP_Integer maxd;
     GMP_Integer d;
     GMP_Integer tmp;
-    for (auto n : N.constraints()) {
+    for (const auto& n : N.constraints()) {
         max = 0;
         maxd = 1;
-        for (auto c : C.generators()) {
+        for (const auto& c : C.generators()) {
             tmp = n.coefficient(x)*c.coefficient(x)
                 + n.coefficient(y)*c.coefficient(y);
 
@@ -183,10 +183,10 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
                            + max >= 0);
     }
 
-    for (auto c : C.constraints()) {
+    for (const auto& c : C.constraints()) {
         max = 0;
         maxd = 1;
-        for (auto n : N.generators()) {
+        for (const auto& n : N.generators()) {
             tmp = c.coefficient(x)*n.coefficient(x)
                 + c.coefficient(y)*n.coefficient(y);
 
@@ -209,7 +209,7 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
 vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N) {
     vector<C_Polyhedron> res;
 
-    for (auto n : N) {
+    for (const auto& n : N) {
         res.emplace_back(translate_touching(C, n));
     }
 
@@ -218,8 +218,8 @@ vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Po
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     C_Polyhedron res(2, EMPTY);
-    for (auto v_a : a.generators()) {
-        for (auto v_b : b.generators()) {
+    for (const auto& v_a : a.generators()) {
+        for (const auto& v_b : b.generators()) {
             res.add_generator(point((v_a.coefficient(x)*v_b.divisor()
                                      + v_b.coefficient(x)*v_a.divisor())*x
                                     + (v_a.coefficient(y)*v_b.divisor()
@@ -232,7 +232,7 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
 }
 
 bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
-    for (auto b : B) {
+    for (const auto& b : B) {
         auto tmp = C_Polyhedron(A);
         tmp.intersection_assign(b);
 
@@ -255,7 +255,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
         auto U1 = translate_into(P, Ncc);
 
         vector<C_Polyhedron> Ndd;
-        for (auto d : Nd) {
+        for (const auto& d : Nd) {
             auto tmp = C_Polyhedron(d);
             tmp.intersection_assign(P_over);
 
@@ -289,7 +289,7 @@ bool can_translate_into(C_Polyhedron P,
         auto U1 = translate_into(P, Ncc);
 
         vector<C_Polyhedron> Ndd;
-        for (auto d : Nd) {
+        for (const auto& d : Nd) {
             auto tmp = C_Polyhedron(d);
             tmp.intersection_assign(P_over);
 
@@ -380,7 +380,7 @@ void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom)
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     C_Polyhedron res(2, EMPTY);
 
-    for (auto P : P_v) {
+    for (const auto& P : P_v) {
         res.add_generators(P.generators());
     }
 
