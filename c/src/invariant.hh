@@ -66,6 +66,10 @@ void print_points(const list<IntervalData>& P);
 void print_over(const list<IntervalData>& P);
 void print_u_over(const list<IntervalData>& P);
 void fprint_points(const list<IntervalData>& P, string fname);
+void print_points(const vector<C_Polyhedron>& P);
+void fprint_points(const vector<C_Polyhedron>& P, string fname);
+void fprint_points(const C_Polyhedron& P, string fname, bool append);
+void print_points(const C_Polyhedron& P);
 
 vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega);
 
@@ -83,18 +87,13 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                                     const C_Polyhedron& P_over,
                                     const C_Polyhedron& Nc,
                                     const vector<C_Polyhedron>& Nd);
-void print_points(const vector<C_Polyhedron>& P);
-void fprint_points(const vector<C_Polyhedron>& P, string fname);
-void fprint_points(const C_Polyhedron& P, string fname, bool append);
-void print_points(const C_Polyhedron& P);
-bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
-
 C_Polyhedron translate_into(const C_Polyhedron &C, const C_Polyhedron& N);
 vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
                                     const vector<C_Polyhedron>& N,
                                     const C_Polyhedron& D);
 C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N);
 vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N);
+bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b);
 

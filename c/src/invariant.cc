@@ -7,10 +7,9 @@
 #include <vector>
 
 using namespace std;
-#define epsilon 3e-2
+#define epsilon 4e-2
 
 extern uint8_t stop;
-extern uint64_t counter;
 
 uint64_t kk = 0;
 I U(-2, 2);
@@ -200,9 +199,6 @@ list<IntervalData> I_approx(const list<IntervalData>& Omega) {
     stop = N.empty() && E.empty();
 
     cout << "considered " << num_int << " intervals\n";
-
-    cout << "counted " << counter << " iterations\n";
-    counter = 0;
 
     return S;
 }

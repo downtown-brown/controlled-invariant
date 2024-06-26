@@ -22,8 +22,6 @@ using namespace std;
 using namespace boost::numeric;
 using namespace interval_lib;
 
-uint64_t counter;
-
 static Variable x(0);
 static Variable y(1);
 
@@ -31,10 +29,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
                                 vector<C_Polyhedron>::iterator end)
 {
-    counter++;
     vector<C_Polyhedron> res;
-
-    P = C_Polyhedron(P);
 
     for (;;) {
 
@@ -53,14 +48,12 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
         }
     }
 
-    auto q_h = curr->constraints();
-
-    for (auto i = q_h.begin(); i != q_h.end(); ++i) {
+    for (auto i : curr->constraints()) {
         auto tmp = C_Polyhedron(P);
 
-        tmp.add_constraint(Constraint(-i->coefficient(x)*x
-                                      - i->coefficient(y)*y
-                                      - i->inhomogeneous_term() >= 0));
+        tmp.add_constraint(Constraint(-i.coefficient(x)*x
+                                      - i.coefficient(y)*y
+                                      - i.inhomogeneous_term() >= 0));
 
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
@@ -74,7 +67,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
             res.push_back(tmp);
         }
 
-        P.add_constraint(*i);
+        P.add_constraint(i);
     }
 
     return res;
@@ -87,8 +80,6 @@ bool subset(C_Polyhedron P,
     if (P.is_empty()) {
         return true;
     }
-
-    P = C_Polyhedron(P);
 
     for (;;) {
 
@@ -162,7 +153,6 @@ C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
 vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
                                     const vector<C_Polyhedron>& N,
                                     const C_Polyhedron& D) {
-    vector<C_Polyhedron> res;
 
     auto U1 = translate_into(C, D);
     auto U2 = translate_touching(C, N);
@@ -172,49 +162,47 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
 
 C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     C_Polyhedron res(2);
-    auto N_h = N.constraints();
-    auto C_p = C.generators();
-    for (auto n = N_h.begin(); n != N_h.end(); ++n) {
-        GMP_Integer max = 0;
-        GMP_Integer maxd = 1;
-        GMP_Integer d;
-        for (auto c = C_p.begin(); c != C_p.end(); ++c) {
-            GMP_Integer tmp = n->coefficient(x)*c->coefficient(x)
-                + n->coefficient(y)*c->coefficient(y);
+    GMP_Integer max;
+    GMP_Integer maxd;
+    GMP_Integer d;
+    GMP_Integer tmp;
+    for (auto n : N.constraints()) {
+        max = 0;
+        maxd = 1;
+        for (auto c : C.generators()) {
+            tmp = n.coefficient(x)*c.coefficient(x)
+                + n.coefficient(y)*c.coefficient(y);
 
-            d = c->divisor();
+            d = c.divisor();
 
             if (tmp*maxd > max*d || max == 0) {
                 max = tmp;
                 maxd = d;
             }
         }
-        res.add_constraint(n->coefficient(x)*maxd*x
-                           + n->coefficient(y)*maxd*y
-                           + maxd*n->inhomogeneous_term()
+        res.add_constraint(n.coefficient(x)*maxd*x
+                           + n.coefficient(y)*maxd*y
+                           + maxd*n.inhomogeneous_term()
                            + max >= 0);
     }
 
-    auto C_h = C.constraints();
-    auto N_p = N.generators();
-    for (auto c = C_h.begin(); c != C_h.end(); ++c) {
-        GMP_Integer max = 0;
-        GMP_Integer maxd = 1;
-        GMP_Integer d;
-        for (auto n = N_p.begin(); n != N_p.end(); ++n) {
-            GMP_Integer tmp = c->coefficient(x)*n->coefficient(x)
-                + c->coefficient(y)*n->coefficient(y);
+    for (auto c : C.constraints()) {
+        max = 0;
+        maxd = 1;
+        for (auto n : N.generators()) {
+            tmp = c.coefficient(x)*n.coefficient(x)
+                + c.coefficient(y)*n.coefficient(y);
 
-            d = n->divisor();
+            d = n.divisor();
 
             if (tmp*maxd > max*d || max == 0) {
                 max = tmp;
                 maxd = d;
             }
         }
-        res.add_constraint(-c->coefficient(x).get_d()*maxd*x
-                           - c->coefficient(y).get_d()*maxd*y
-                           + maxd*c->inhomogeneous_term().get_d()
+        res.add_constraint(-c.coefficient(x).get_d()*maxd*x
+                           - c.coefficient(y).get_d()*maxd*y
+                           + maxd*c.inhomogeneous_term().get_d()
                            + max >= 0);
     }
 
@@ -233,15 +221,13 @@ vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Po
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     C_Polyhedron res(2, EMPTY);
-    auto V_a = a.generators();
-    auto V_b = b.generators();
-    for (auto v_a = V_a.begin(); v_a != V_a.end(); ++v_a) {
-        for (auto v_b = V_b.begin(); v_b != V_b.end(); ++v_b) {
-            res.add_generator(point((v_a->coefficient(x)*v_b->divisor()
-                                     + v_b->coefficient(x)*v_a->divisor())*x
-                                    + (v_a->coefficient(y)*v_b->divisor()
-                                       + v_b->coefficient(y)*v_a->divisor())*y,
-                                    v_a->divisor()*v_b->divisor()));
+    for (auto v_a : a.generators()) {
+        for (auto v_b : b.generators()) {
+            res.add_generator(point((v_a.coefficient(x)*v_b.divisor()
+                                     + v_b.coefficient(x)*v_a.divisor())*x
+                                    + (v_a.coefficient(y)*v_b.divisor()
+                                       + v_b.coefficient(y)*v_a.divisor())*y,
+                                    v_a.divisor()*v_b.divisor()));
 
         }
     }
@@ -249,9 +235,9 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
 }
 
 bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
-    for (auto b = B.begin(); b != B.end(); ++b) {
+    for (auto b : B) {
         auto tmp = C_Polyhedron(A);
-        tmp.intersection_assign(*b);
+        tmp.intersection_assign(b);
 
         if (!tmp.is_empty()) {
             return true;
@@ -272,8 +258,8 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
         auto U1 = translate_into(P, Ncc);
 
         vector<C_Polyhedron> Ndd;
-        for (auto d = Nd.begin(); d != Nd.end(); ++d) {
-            auto tmp = C_Polyhedron(*d);
+        for (auto d : Nd) {
+            auto tmp = C_Polyhedron(d);
             tmp.intersection_assign(P_over);
 
             if (!tmp.is_empty()) {
@@ -286,14 +272,6 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
         if (U2.empty()) {
             return {U1};
         } else {
-            //cout << "U1:\n";
-            //print_points(U1);
-            //
-            //cout << "U2:\n";
-            //print_points(U2);
-            //cout << "subset: " << subset(U1, U2.begin(), U2.end());
-            //
-
             return regiondiff(U1, U2.begin(), U2.end());
         }
 
@@ -314,8 +292,8 @@ bool can_translate_into(C_Polyhedron P,
         auto U1 = translate_into(P, Ncc);
 
         vector<C_Polyhedron> Ndd;
-        for (auto d = Nd.begin(); d != Nd.end(); ++d) {
-            auto tmp = C_Polyhedron(*d);
+        for (auto d : Nd) {
+            auto tmp = C_Polyhedron(d);
             tmp.intersection_assign(P_over);
 
             if (!tmp.is_empty()) {
@@ -405,8 +383,8 @@ void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom)
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     C_Polyhedron res(2, EMPTY);
 
-    for (auto P = P_v.begin(); P != P_v.end(); ++P) {
-        res.add_generators(P->generators());
+    for (auto P : P_v) {
+        res.add_generators(P.generators());
     }
 
     return C_Polyhedron(res.minimized_generators());
