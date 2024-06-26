@@ -3,6 +3,7 @@
 #include <climits>
 #include <cmath>
 #include <cstdint>
+#include <ctime>
 #include <fstream>
 #include <ios>
 #include <iterator>
@@ -231,19 +232,39 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     return C_Polyhedron(res.minimized_generators());
 }
 
-bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
-    for (const auto& b : B) {
-        auto tmp = C_Polyhedron(A);
-        tmp.intersection_assign(b);
-
-        if (!tmp.is_empty()) {
+bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
+    for (const auto& a : A.constraints()) {
+        bool sep = true;
+        for (const auto& b : B.generators()) {
+            if (a.coefficient(x)*b.coefficient(x)
+                + a.coefficient(y)*b.coefficient(y)
+                + a.inhomogeneous_term()*b.divisor() >= 0) {
+                sep = false;
+                break;
+            }
+        }
+        if (sep) {
             return true;
         }
     }
-
     return false;
 }
 
+bool intersects(const C_Polyhedron& A, const C_Polyhedron& B) {
+    return !has_separating_plane(A, B) && !has_separating_plane(B, A);
+}
+
+bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
+    for (auto b : B) {
+        if (intersects(A, b)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+extern double t_ndd_tot;
+extern double t_sub_tot;
 vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                                     const C_Polyhedron& P_over,
                                     const C_Polyhedron& Nc,
@@ -251,6 +272,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
     auto Ncc = C_Polyhedron(Nc);
     Ncc.intersection_assign(P_over);
 
+    clock_t start = clock();
     if (!Nd.empty()) {
         auto U1 = translate_into(P, Ncc);
 
@@ -263,6 +285,12 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                 Ndd.push_back(tmp);
             }
         }
+
+        clock_t t1 = clock();
+        //printf("Computed Ndd (%ld -> %ld elements) %.10f seconds\n\n",
+        //       Nd.size(), Ndd.size(), (double)(t1 - start)/CLOCKS_PER_SEC);
+
+        t_ndd_tot += (double)(t1-start)/CLOCKS_PER_SEC;
 
         auto U2 = translate_touching(P, Ndd);
 
@@ -271,6 +299,9 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
         } else {
             return regiondiff(U1, U2.begin(), U2.end());
         }
+        clock_t end = clock();
+        //printf("Computed regiondiff %.10f seconds\n\n", (double)(end - t1)/CLOCKS_PER_SEC);
+        t_sub_tot += (double)(end - t1)/CLOCKS_PER_SEC;
 
     } else {
         auto U1 = translate_into(P, Ncc);
@@ -278,29 +309,36 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
     }
 }
 
-bool can_translate_into(C_Polyhedron P,
-                        C_Polyhedron P_over,
-                        C_Polyhedron Nc,
-                        vector<C_Polyhedron> Nd) {
+bool can_translate_into(const C_Polyhedron& P,
+                        const C_Polyhedron& P_over,
+                        const C_Polyhedron& Nc,
+                        const vector<C_Polyhedron>& Nd) {
     auto Ncc = C_Polyhedron(Nc);
     Ncc.intersection_assign(P_over);
 
+    clock_t start = clock();
     if (!Nd.empty()) {
         auto U1 = translate_into(P, Ncc);
 
         vector<C_Polyhedron> Ndd;
         for (const auto& d : Nd) {
-            auto tmp = C_Polyhedron(d);
-            tmp.intersection_assign(P_over);
-
-            if (!tmp.is_empty()) {
+            if (intersects(P_over, d)) {
+                auto tmp = d;
+                tmp.intersection_assign(P_over);
                 Ndd.push_back(tmp);
             }
         }
 
+        clock_t t1 = clock();
+        t_ndd_tot += (double)(t1-start)/CLOCKS_PER_SEC;
+
         auto U2 = translate_touching(P, Ndd);
 
-        return !subset(U1, U2.begin(), U2.end()) && !U1.is_empty();
+        bool res = !subset(U1, U2.begin(), U2.end()) && !U1.is_empty();
+        clock_t end = clock();
+        t_sub_tot += (double)(end - t1)/CLOCKS_PER_SEC;
+
+        return res;
 
     } else {
         auto U1 = translate_into(P, Ncc);
@@ -375,6 +413,27 @@ C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     return C_Polyhedron(res.minimized_generators());
 }
 
+C_Polyhedron intervalhull(const vector<C_Polyhedron>& P_v) {
+    double l0 = HUGE_VAL, l1 = HUGE_VAL, u0 = -HUGE_VAL, u1 = -HUGE_VAL, px, py;
+
+    for (const auto& P : P_v) {
+        for (const auto& p : P.generators()) {
+            px = p.coefficient(x).get_d() / p.divisor().get_d();
+            py = p.coefficient(y).get_d() / p.divisor().get_d();
+            if (px < l0)
+                l0 = px;
+            if (py < l1)
+                l1 = py;
+            if (px > u0)
+                u0 = px;
+            if (py > u1)
+                u1 = py;
+        }
+    }
+
+    return i2p({I(l0, u0), I(l1, u1)});
+}
+
 void merge_once(list<IntervalData> &Omega) {
     for (auto Ait = Omega.begin(); Ait != Omega.end(); Ait++) {
         for (auto Bit = Omega.begin(); Bit != Omega.end(); Bit++) {
@@ -392,7 +451,6 @@ void merge_once(list<IntervalData> &Omega) {
 }
 
 void merge(list<IntervalData> &Omega) {
-    cout << "Merging list of size " << Omega.size() << endl;
     auto len = Omega.size();
     ulong len2 = 0;
     while (len != len2) {
@@ -400,7 +458,6 @@ void merge(list<IntervalData> &Omega) {
         merge_once(Omega);
         len = Omega.size();
     }
-    cout << "Reduced size to " << Omega.size() << endl;
 }
 
 list<IntervalData> merge(const IntervalData& A, const IntervalData& B) {

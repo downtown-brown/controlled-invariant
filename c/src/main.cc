@@ -1,6 +1,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <iterator>
+#include <ostream>
 #include <ppl.hh>
 #include <stdio.h>
 #include <time.h>
@@ -20,6 +21,9 @@ static Variable x(0);
 static Variable y(1);
 
 uint8_t stop = 0;
+
+double t_ndd_tot = 0;
+double t_sub_tot = 0;
 
 void tests() {
 
@@ -206,7 +210,7 @@ void tests() {
     printf("Computed merge (%ld left) in %.10f seconds\n\n", res10.size(), (double)(end - start)/CLOCKS_PER_SEC / 1000);
 
     start = clock();
-    for (int i = 0; i < 1; i++) {
+    for (int i = 0; i < 1000; i++) {
         merge(x10);
     }
     end = clock();
@@ -233,13 +237,15 @@ int main() {
         if (ii == 0) {
             res = I_approx({Omega});
         } else {
-            merge(res);
             res = I_approx(res);
         }
         ii++;
     }
     auto end = clock();
     printf("Computed %ld iters I_approx %.10f seconds\n\n", ii, (double)(end - start)/CLOCKS_PER_SEC);
+
+    cout << "Ndd: " << t_ndd_tot << endl
+         << "Subset: " << t_sub_tot << endl;
 
     /*
     print_points(res);

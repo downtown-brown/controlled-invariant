@@ -50,7 +50,7 @@ list<IntervalData> I_accel(const list<IntervalData>& Omega);
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
-double width(nI interval);
+bool wider_than(nI interval);
 array<double, n> median(nI interval);
 
 
@@ -79,10 +79,10 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
 bool subset(C_Polyhedron P,
             vector<C_Polyhedron>::iterator curr,
             vector<C_Polyhedron>::iterator end);
-bool can_translate_into(C_Polyhedron P,
-                        C_Polyhedron P_over,
-                        C_Polyhedron Nc,
-                        vector<C_Polyhedron> Nd);
+bool can_translate_into(const C_Polyhedron& P,
+                        const C_Polyhedron& P_over,
+                        const C_Polyhedron& Nc,
+                        const vector<C_Polyhedron>& Nd);
 vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                                     const C_Polyhedron& P_over,
                                     const C_Polyhedron& Nc,
@@ -102,6 +102,7 @@ void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom);
 
 
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);
+C_Polyhedron intervalhull(const vector<C_Polyhedron>& P_v);
 
 list<IntervalData> merge(const IntervalData& A, const IntervalData& B);
 void merge(list<IntervalData>& Omega);

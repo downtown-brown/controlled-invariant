@@ -7,7 +7,7 @@
 #include <vector>
 
 using namespace std;
-#define epsilon 4e-2
+#define epsilon 2e-2
 
 extern uint8_t stop;
 
@@ -28,6 +28,7 @@ vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega) {
         Omega_p[i] = O.poly;
         i++;
     }
+
     auto Nc = convexhull(Omega_p);
     auto Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
 
@@ -67,51 +68,44 @@ list<IntervalData> I_accel(const list<IntervalData>& Omega) {
     auto Nc = convexhull(L_p);
     auto Nd = regiondiff(Nc, L_p.begin(), L_p.end());
 
+    int jj = 0;
     while (1) {
-
+        jj++;
         auto x = L.front();
         L.pop_front();
         num_int++;
 
-        // cout << "Considering x: " << endl;
-        // print_points(x.poly);
-        // print_points(x.P_over);
-        // print_points(x.P_u_over);
-        // print_points(Nc);
-        // print_points(Nd);
-
-
         if (!intersects(x.P_over, L_p)) {
-            //cout << "Putting in N\n";
-            //print_points(x.P_over);
-            //print_points(x.P_over);
             N.push_back(x);
             Nd.push_back(x.poly);
             j++;
         } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
-            //cout << "Putting in S\n";
             x.checked = j;
             L.push_back(x);
-        } else if (width(x.interval) < epsilon) {
-            //cout << "Putting in E, width = " << width(x.interval) << endl;
+        } else if (!wider_than(x.interval)) {
             E.push_back(x);
             Nd.push_back(x.poly);
             j++;
         } else {
-            // cout << "Bisecting\n";
             auto xs = bisect(x);
             L.push_front(get<0>(xs));
             L.push_front(get<1>(xs));
         }
 
-        uint8_t stop = 1;
+        bool stop = true;
         for (const auto& i : L) {
-            if (i.checked != j)
-                stop = 0;
+            if (i.checked != j) {
+                stop = false;
+                break;
+            }
         }
 
         if (stop)
             break;
+
+        if (jj % 250 == 0) {
+            cout << "Iteration: " << jj << endl;
+        }
     }
 
 
@@ -160,41 +154,34 @@ list<IntervalData> I_approx(const list<IntervalData>& Omega) {
         L.pop_back();
         num_int++;
 
-        // cout << "Considering x: " << endl;
-        // print_points(x.poly);
-        // print_points(x.P_over);
-        // print_points(x.P_u_over);
-        // print_points(Nc);
-        // print_points(Nd);
-
-
         if (!intersects(x.P_over, Omega_p)) {
-            //cout << "Putting in N\n";
-            //print_points(x.P_over);
-            //print_points(x.P_over);
             N.push_back(x);
-                    } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
-            //cout << "Putting in S\n";
+            x.status = STATUS_NOT_IN;
+        } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
             S.push_back(x);
-        } else if (width(x.interval) < epsilon) {
-            //cout << "Putting in E, width = " << width(x.interval) << endl;
+            x.status = STATUS_IN;
+        } else if (!wider_than(x.interval)) {
             E.push_back(x);
+            x.status = STATUS_BOUNDARY;
         } else {
-            //cout << "Bisecting\n";
+            x.status = STATUS_UNDETERMINED;
             auto xs = bisect(x);
             L.push_back(get<0>(xs));
             L.push_back(get<1>(xs));
         }
     }
 
+    merge(N);
+    merge(S);
+    merge(E);
+
     cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << endl;
+
     fprint_points(N, DATADIR + "n" + to_string(kk) + ".txt");
     fprint_points(E, DATADIR + "e" + to_string(kk) + ".txt");
     fprint_points(S, DATADIR + "s" + to_string(kk) + ".txt");
 
     kk++;
-    //cout << "Over\n";
-    //print_over(S);
 
     stop = N.empty() && E.empty();
 
@@ -232,16 +219,14 @@ pair<IntervalData, IntervalData> bisect(IntervalData x) {
     return {x_l, x_r};
 }
 
-double width(nI interval) {
-    double max_width = 0;
+bool wider_than(nI interval) {
     for (int i = 0; i < n; i++) {
-        auto curr_width = width(interval[i]);
-        if (curr_width > max_width) {
-            max_width = curr_width;
+        if (width(interval[i]) > epsilon) {
+            return true;
         }
     }
 
-    return max_width;
+    return false;
 }
 
 IntervalData::IntervalData(nI x) {
