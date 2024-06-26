@@ -77,7 +77,7 @@ bool subset(C_Polyhedron P,
             vector<C_Polyhedron>::iterator curr,
             vector<C_Polyhedron>::iterator end)
 {
-    if (P.is_empty()) {
+    if (P.is_empty() || curr == end) {
         return true;
     }
 
@@ -300,19 +300,7 @@ bool can_translate_into(C_Polyhedron P,
 
         auto U2 = translate_touching(P, Ndd);
 
-        if (U2.empty()) {
-            return !U1.is_empty();
-        } else {
-            //cout << "U1:\n";
-            //print_points(U1);
-            //
-            //cout << "U2:\n";
-            //print_points(U2);
-            //cout << "subset: " << subset(U1, U2.begin(), U2.end());
-            //
-
-            return !subset(U1, U2.begin(), U2.end());
-        }
+        return !subset(U1, U2.begin(), U2.end()) && !U1.is_empty();
 
     } else {
         auto U1 = translate_into(P, Ncc);
@@ -416,32 +404,33 @@ void merge(list<IntervalData> &Omega) {
 }
 
 list<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
-    bool must_be_equal = false;
-    int idx_nequal = 0;
+    bool must_be_eq = false;
+    int i_n = 0;
 
     for (int i = 0; i < n; i++) {
         if ((A.interval[i].lower() > B.interval[i].upper()) ||
             (A.interval[i].upper() < B.interval[i].lower())) {
+
             return {};
+
         } else if ((A.interval[i].lower() != B.interval[i].lower()) ||
                    (A.interval[i].upper() != B.interval[i].upper())) {
-            if (must_be_equal) {
+
+            if (must_be_eq) {
                 return {};
             } else {
-                must_be_equal = true;
-                idx_nequal = i;
+                must_be_eq = true;
+                i_n = i;
             }
         }
     }
 
     auto interval = A.interval;
 
-    if (A.interval[idx_nequal].lower() == B.interval[idx_nequal].upper()) {
-        interval[idx_nequal] = I(B.interval[idx_nequal].lower(),
-                                 A.interval[idx_nequal].upper());
+    if (A.interval[i_n].lower() == B.interval[i_n].upper()) {
+        interval[i_n] = I(B.interval[i_n].lower(), A.interval[i_n].upper());
     } else {
-        interval[idx_nequal] = I(A.interval[idx_nequal].lower(),
-                                 B.interval[idx_nequal].upper());
+        interval[i_n] = I(A.interval[i_n].lower(), B.interval[i_n].upper());
     }
 
     return {IntervalData(interval)};
