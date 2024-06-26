@@ -45,7 +45,7 @@ vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega) {
     return U;
 }
 
-list<IntervalData> I_accel(list<IntervalData> Omega) {
+list<IntervalData> I_accel(const list<IntervalData>& Omega) {
     uint64_t num_int = 0;
     list<IntervalData> S;
     list<IntervalData> N;
@@ -138,7 +138,7 @@ list<IntervalData> I_accel(list<IntervalData> Omega) {
     return S;
 }
 
-list<IntervalData> I_approx(list<IntervalData> Omega) {
+list<IntervalData> I_approx(const list<IntervalData>& Omega) {
     uint64_t num_int = 0;
     list<IntervalData> S;
     list<IntervalData> N;
@@ -208,32 +208,6 @@ list<IntervalData> I_approx(list<IntervalData> Omega) {
 }
 
 
-void print_points(list<IntervalData> P) {
-    for (auto p = P.begin(); p != P.end(); ++p) {
-        print_points(p->poly);
-    }
-}
-
-void fprint_points(list<IntervalData> P, string fname) {
-    bool append = false;
-    for (auto p = P.begin(); p != P.end(); ++p) {
-        fprint_points(p->poly, fname, append);
-        append = true;
-    }
-}
-
-void print_over(list<IntervalData> P) {
-    for (auto p = P.begin(); p != P.end(); ++p) {
-        print_points(p->P_over);
-    }
-}
-
-void print_u_over(list<IntervalData> P) {
-    for (auto p = P.begin(); p != P.end(); ++p) {
-        print_points(p->P_u_over);
-    }
-}
-
 
 pair<IntervalData, IntervalData> bisect(IntervalData x) {
     double max_width = 0;
@@ -285,7 +259,7 @@ IntervalData::IntervalData(nI x) {
 
     lchild = NULL;
     rchild = NULL;
-    invariant = true;
+    status = STATUS_UNDETERMINED;
     iter = 0;
 }
 

@@ -131,7 +131,7 @@ bool subset(C_Polyhedron P,
     return true;
 }
 
-C_Polyhedron translate_into(C_Polyhedron C, C_Polyhedron N) {
+C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
     C_Polyhedron res(2);
     auto N_h = N.constraints();
     auto C_p = C.generators();
@@ -159,7 +159,9 @@ C_Polyhedron translate_into(C_Polyhedron C, C_Polyhedron N) {
     return res;
 }
 
-vector<C_Polyhedron> translate_into(C_Polyhedron C, vector<C_Polyhedron> N, C_Polyhedron D) {
+vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
+                                    const vector<C_Polyhedron>& N,
+                                    const C_Polyhedron& D) {
     vector<C_Polyhedron> res;
 
     auto U1 = translate_into(C, D);
@@ -168,7 +170,7 @@ vector<C_Polyhedron> translate_into(C_Polyhedron C, vector<C_Polyhedron> N, C_Po
     return regiondiff(U1, U2.begin(), U2.end());
 }
 
-C_Polyhedron translate_touching(C_Polyhedron C, C_Polyhedron N) {
+C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     C_Polyhedron res(2);
     auto N_h = N.constraints();
     auto C_p = C.generators();
@@ -219,7 +221,7 @@ C_Polyhedron translate_touching(C_Polyhedron C, C_Polyhedron N) {
     return res;
 }
 
-vector<C_Polyhedron> translate_touching(C_Polyhedron C, vector<C_Polyhedron> N) {
+vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N) {
     vector<C_Polyhedron> res;
 
     for (auto n = N.begin(); n != N.end(); ++n) {
@@ -229,7 +231,7 @@ vector<C_Polyhedron> translate_touching(C_Polyhedron C, vector<C_Polyhedron> N) 
     return res;
 }
 
-C_Polyhedron operator+(C_Polyhedron a, C_Polyhedron b) {
+C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     C_Polyhedron res(2, EMPTY);
     auto V_a = a.generators();
     auto V_b = b.generators();
@@ -246,57 +248,7 @@ C_Polyhedron operator+(C_Polyhedron a, C_Polyhedron b) {
     return C_Polyhedron(res.minimized_generators());
 }
 
-void print_points(C_Polyhedron P) {
-    auto gs = P.generators();
-    cout << "[";
-    for (auto g = gs.begin(); g != gs.end(); ++g) {
-        if (g->is_point()) {
-            cout << "[" << g->coefficient(x).get_d() / g->divisor().get_d() << ","
-                 << g->coefficient(y).get_d() / g->divisor().get_d() << "]; ";
-        }
-        else {
-            g->ascii_dump();
-        }
-    }
-    cout << "\b\b]\n\n";
-}
-
-void fprint_points(C_Polyhedron P, string fname, bool append) {
-    auto gs = P.generators();
-    ofstream f;
-    if (append) {
-        f.open(fname, ios_base::app);
-    } else {
-        f.open(fname);
-    }
-
-    f << "[";
-    for (auto g = gs.begin(); g != gs.end(); ++g) {
-        if (g->is_point()) {
-            f << "[" << g->coefficient(x).get_d() / g->divisor().get_d() << ","
-                 << g->coefficient(y).get_d() / g->divisor().get_d() << "]; ";
-        }
-        else {
-            g->ascii_dump();
-        }
-    }
-    f << "]\n";
-}
-
-void print_points(vector<C_Polyhedron> P) {
-    for (auto p = P.begin(); p != P.end(); ++p) {
-        print_points(*p);
-    }
-}
-void fprint_points(vector<C_Polyhedron> P, string fname) {
-    bool append = false;
-    for (auto p = P.begin(); p != P.end(); ++p) {
-        fprint_points(*p, fname, append);
-        append = true;
-    }
-}
-
-bool intersects(C_Polyhedron A, vector<C_Polyhedron> B) {
+bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
     for (auto b = B.begin(); b != B.end(); ++b) {
         auto tmp = C_Polyhedron(A);
         tmp.intersection_assign(*b);
@@ -309,10 +261,10 @@ bool intersects(C_Polyhedron A, vector<C_Polyhedron> B) {
     return false;
 }
 
-vector<C_Polyhedron> translate_into(C_Polyhedron P,
-                                    C_Polyhedron P_over,
-                                    C_Polyhedron Nc,
-                                    vector<C_Polyhedron> Nd) {
+vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
+                                    const C_Polyhedron& P_over,
+                                    const C_Polyhedron& Nc,
+                                    const vector<C_Polyhedron>& Nd) {
     auto Ncc = C_Polyhedron(Nc);
     Ncc.intersection_assign(P_over);
 
@@ -450,7 +402,7 @@ void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom)
 	*num = neg ? -h[1] : h[1];
 }
 
-C_Polyhedron convexhull(vector<C_Polyhedron> P_v) {
+C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     C_Polyhedron res(2, EMPTY);
 
     for (auto P = P_v.begin(); P != P_v.end(); ++P) {
@@ -488,18 +440,18 @@ void merge(list<IntervalData> &Omega) {
     cout << "Reduced size to " << Omega.size() << endl;
 }
 
-list<IntervalData> merge(IntervalData A, IntervalData B) {
+list<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
     bool must_be_equal = false;
     int idx_nequal = 0;
 
     for (int i = 0; i < n; i++) {
         if ((A.interval[i].lower() > B.interval[i].upper()) ||
             (A.interval[i].upper() < B.interval[i].lower())) {
-            return {A, B};
+            return {};
         } else if ((A.interval[i].lower() != B.interval[i].lower()) ||
                    (A.interval[i].upper() != B.interval[i].upper())) {
             if (must_be_equal) {
-                return {A, B};
+                return {};
             } else {
                 must_be_equal = true;
                 idx_nequal = i;

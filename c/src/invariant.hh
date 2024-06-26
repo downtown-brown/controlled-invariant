@@ -25,6 +25,13 @@ typedef interval<double, policies<save_state<rounded_transc_std<double>>,
 
 typedef array<I, n> nI;
 
+enum InvarianceStatus {
+    STATUS_IN,
+    STATUS_NOT_IN,
+    STATUS_BOUNDARY,
+    STATUS_UNDETERMINED
+};
+
 typedef struct IntervalData {
     nI interval;
     C_Polyhedron poly;
@@ -32,14 +39,14 @@ typedef struct IntervalData {
     C_Polyhedron P_over;
     IntervalData* lchild;
     IntervalData* rchild;
-    bool invariant;
+    enum InvarianceStatus status;
     int64_t iter;
     uint32_t checked;
     IntervalData(nI x);
 } IntervalData;
 
-list<IntervalData> I_approx(list<IntervalData> Omega);
-list<IntervalData> I_accel(list<IntervalData> Omega);
+list<IntervalData> I_approx(const list<IntervalData>& Omega);
+list<IntervalData> I_accel(const list<IntervalData>& Omega);
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
@@ -55,10 +62,10 @@ nI Phi(nI X, array<double, 2> x);
 
 nI Psi(nI X, array<double, 2> x, I u);
 
-void print_points(list<IntervalData> P);
-void print_over(list<IntervalData> P);
-void print_u_over(list<IntervalData> P);
-void fprint_points(list<IntervalData> P, string fname);
+void print_points(const list<IntervalData>& P);
+void print_over(const list<IntervalData>& P);
+void print_u_over(const list<IntervalData>& P);
+void fprint_points(const list<IntervalData>& P, string fname);
 
 vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega);
 
@@ -72,28 +79,30 @@ bool can_translate_into(C_Polyhedron P,
                         C_Polyhedron P_over,
                         C_Polyhedron Nc,
                         vector<C_Polyhedron> Nd);
-vector<C_Polyhedron> translate_into(C_Polyhedron P,
-                                    C_Polyhedron P_over,
-                                    C_Polyhedron Nc,
-                                    vector<C_Polyhedron> Nd);
-void print_points(vector<C_Polyhedron> P);
-void fprint_points(vector<C_Polyhedron> P, string fname);
-void fprint_points(C_Polyhedron P, string fname, bool append);
-void print_points(C_Polyhedron P);
-bool intersects(C_Polyhedron A, vector<C_Polyhedron> B);
+vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
+                                    const C_Polyhedron& P_over,
+                                    const C_Polyhedron& Nc,
+                                    const vector<C_Polyhedron>& Nd);
+void print_points(const vector<C_Polyhedron>& P);
+void fprint_points(const vector<C_Polyhedron>& P, string fname);
+void fprint_points(const C_Polyhedron& P, string fname, bool append);
+void print_points(const C_Polyhedron& P);
+bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
 
-C_Polyhedron translate_into(C_Polyhedron C, C_Polyhedron N);
-vector<C_Polyhedron> translate_into(C_Polyhedron C, vector<C_Polyhedron> N, C_Polyhedron D);
-C_Polyhedron translate_touching(C_Polyhedron C, C_Polyhedron N);
-vector<C_Polyhedron> translate_touching(C_Polyhedron C, vector<C_Polyhedron> N);
+C_Polyhedron translate_into(const C_Polyhedron &C, const C_Polyhedron& N);
+vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
+                                    const vector<C_Polyhedron>& N,
+                                    const C_Polyhedron& D);
+C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N);
+vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N);
 
-C_Polyhedron operator+(C_Polyhedron a, C_Polyhedron b);
+C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b);
 
 C_Polyhedron i2p(nI x_int);
 void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom);
 
 
-C_Polyhedron convexhull(vector<C_Polyhedron> P_v);
+C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);
 
-list<IntervalData> merge(IntervalData A, IntervalData B);
-void merge(list<IntervalData> &Omega);
+list<IntervalData> merge(const IntervalData& A, const IntervalData& B);
+void merge(list<IntervalData>& Omega);
