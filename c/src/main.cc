@@ -8,7 +8,6 @@
 #include <vector>
 #include <boost/numeric/interval.hpp>
 
-#include "polyhedra.hh"
 #include "invariant.hh"
 
 using namespace Parma_Polyhedra_Library;
@@ -16,8 +15,6 @@ using namespace std;
 using namespace boost::numeric;
 using namespace interval_lib;
 
-typedef interval<double, policies<save_state<rounded_transc_std<double>>,
-                                  checking_base<double>>> I;
 
 static Variable x(0);
 static Variable y(1);
@@ -163,7 +160,7 @@ void tests() {
 
     printf("Translated C to P \\ P_v: %d in %.15f seconds\n\n",res7, (double)(end - start)/CLOCKS_PER_SEC / 1000);
 
-    tuple<I, I> x = {I(0.1,0.2), I(-0.1, 0.3)};
+    nI x = {I(0.1,0.2), I(-0.1, 0.3)};
 
     C_Polyhedron res8;
     start = clock();
@@ -184,6 +181,44 @@ void tests() {
     print_points(res9);
 
     printf("Computed convex hull of P_v in %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    IntervalData x1({I(-4, 4), I(-212, 2)});
+    IntervalData x2({I(-4, 4), I(2, 139)});
+    IntervalData x3({I(-4, 4), I(139, 293)});
+    IntervalData x4({I(-3, 4), I(2, 3)});
+    IntervalData x5({I(-5, 4), I(3, 4)});
+    IntervalData x6({I(4, 14), I(2, 3)});
+
+    list<IntervalData> x10 = {x1,x2,x3,x4,x5,x6};
+
+    list<IntervalData> res10;
+    start = clock();
+    for (int i = 0; i < 1000; i++) {
+        res10 = merge(x1,x2);
+    }
+    end = clock();
+
+    for (auto xi : res10) {
+        cout << "[" << xi.interval[0].lower() << ", " << xi.interval[0].upper()
+             << "] x [" << xi.interval[1].lower() << ", " << xi.interval[1].upper() << "]\n";
+    }
+
+    printf("Computed merge (%ld left) in %.10f seconds\n\n", res10.size(), (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+    start = clock();
+    for (int i = 0; i < 1; i++) {
+        merge(x10);
+    }
+    end = clock();
+
+    for (auto xi : x10) {
+        cout << "[" << xi.interval[0].lower() << ", " << xi.interval[0].upper()
+             << "] x [" << xi.interval[1].lower() << ", " << xi.interval[1].upper() << "]\n";
+    }
+
+    printf("Computed merge (%ld left) in %.10f seconds\n\n", x10.size(), (double)(end - start)/CLOCKS_PER_SEC / 1000);
+
+
 }
 
 int main() {
@@ -192,12 +227,13 @@ int main() {
     IntervalData Omega({I(-4, 4), I(-2, 2)});
 
     auto start = clock();
-    vector<IntervalData> res;
+    list<IntervalData> res;
     uint64_t ii = 0;
     while (!stop) {
         if (ii == 0) {
             res = I_approx({Omega});
         } else {
+            merge(res);
             res = I_approx(res);
         }
         ii++;

@@ -10,21 +10,24 @@ using namespace std;
 #define epsilon 3e-2
 
 extern uint8_t stop;
+extern uint64_t counter;
 
 uint64_t kk = 0;
 I U(-2, 2);
 
-vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
+vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega) {
     uint64_t num_int = 0;
     vector<vector<C_Polyhedron>> U;
-    vector<IntervalData> N;
-    vector<IntervalData> E;
-    auto L = vector<IntervalData>(Omega);
+    list<IntervalData> N;
+    list<IntervalData> E;
+    auto L = list<IntervalData>(Omega);
 
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
-    for (uint64_t i = 0; i < len; i++) {
-        Omega_p[i] = Omega[i].poly;
+    int i = 0;
+    for (auto O : Omega) {
+        Omega_p[i] = O.poly;
+        i++;
     }
     auto Nc = convexhull(Omega_p);
     auto Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
@@ -42,11 +45,11 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
     return U;
 }
 
-vector<IntervalData> I_accel(vector<IntervalData> Omega) {
+list<IntervalData> I_accel(list<IntervalData> Omega) {
     uint64_t num_int = 0;
-    vector<IntervalData> S;
-    vector<IntervalData> N;
-    vector<IntervalData> E;
+    list<IntervalData> S;
+    list<IntervalData> N;
+    list<IntervalData> E;
     deque<IntervalData> L;
 
     uint32_t j = 0;
@@ -135,17 +138,19 @@ vector<IntervalData> I_accel(vector<IntervalData> Omega) {
     return S;
 }
 
-vector<IntervalData> I_approx(vector<IntervalData> Omega) {
+list<IntervalData> I_approx(list<IntervalData> Omega) {
     uint64_t num_int = 0;
-    vector<IntervalData> S;
-    vector<IntervalData> N;
-    vector<IntervalData> E;
-    auto L = vector<IntervalData>(Omega);
+    list<IntervalData> S;
+    list<IntervalData> N;
+    list<IntervalData> E;
+    auto L = list<IntervalData>(Omega);
 
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
-    for (uint64_t i = 0; i < len; i++) {
-        Omega_p[i] = Omega[i].poly;
+    int i = 0;
+    for (auto O : Omega) {
+        Omega_p[i] = O.poly;
+        i++;
     }
     auto Nc = convexhull(Omega_p);
     auto Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
@@ -169,7 +174,7 @@ vector<IntervalData> I_approx(vector<IntervalData> Omega) {
             //print_points(x.P_over);
             //print_points(x.P_over);
             N.push_back(x);
-        } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
+                    } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
             //cout << "Putting in S\n";
             S.push_back(x);
         } else if (width(x.interval) < epsilon) {
@@ -196,17 +201,20 @@ vector<IntervalData> I_approx(vector<IntervalData> Omega) {
 
     cout << "considered " << num_int << " intervals\n";
 
+    cout << "counted " << counter << " iterations\n";
+    counter = 0;
+
     return S;
 }
 
 
-void print_points(vector<IntervalData> P) {
+void print_points(list<IntervalData> P) {
     for (auto p = P.begin(); p != P.end(); ++p) {
         print_points(p->poly);
     }
 }
 
-void fprint_points(vector<IntervalData> P, string fname) {
+void fprint_points(list<IntervalData> P, string fname) {
     bool append = false;
     for (auto p = P.begin(); p != P.end(); ++p) {
         fprint_points(p->poly, fname, append);
@@ -214,13 +222,13 @@ void fprint_points(vector<IntervalData> P, string fname) {
     }
 }
 
-void print_over(vector<IntervalData> P) {
+void print_over(list<IntervalData> P) {
     for (auto p = P.begin(); p != P.end(); ++p) {
         print_points(p->P_over);
     }
 }
 
-void print_u_over(vector<IntervalData> P) {
+void print_u_over(list<IntervalData> P) {
     for (auto p = P.begin(); p != P.end(); ++p) {
         print_points(p->P_u_over);
     }
@@ -228,65 +236,67 @@ void print_u_over(vector<IntervalData> P) {
 
 
 pair<IntervalData, IntervalData> bisect(IntervalData x) {
-    pair<I, I> tmp;
-    tuple<I, I> l;
-    tuple<I, I> r;
-    I tmp2;
-    if (width(get<0>(x.interval)) >= width(get<1>(x.interval))) {
-        tmp = bisect(get<0>(x.interval));
-        tmp2 = get<1>(x.interval);
-        l = {get<0>(tmp), tmp2};
-        r = {get<1>(tmp), tmp2};
+    double max_width = 0;
+    int bisect_dim;
+    for (int i = 0; i < n; i++) {
+        auto curr_width = width(x.interval[i]);
+        if (curr_width > max_width) {
+            max_width = curr_width;
+            bisect_dim = i;
+        }
     }
-    else {
-        tmp = bisect(get<1>(x.interval));
-        tmp2 = get<0>(x.interval);
-        l = {tmp2, get<0>(tmp)};
-        r = {tmp2, get<1>(tmp)};
-    }
+
+    auto l = x.interval;
+    auto r = x.interval;
+
+    auto tmp = bisect(x.interval[bisect_dim]);
+
+    l[bisect_dim] = get<0>(tmp);
+    r[bisect_dim] = get<1>(tmp);
 
     IntervalData x_l(l);
     x.lchild = &x_l;
     IntervalData x_r(r);
-    x.lchild = &x_r;
+    x.rchild = &x_r;
 
     return {x_l, x_r};
 }
 
-double width(tuple<I, I> interval) {
-    return max(width(get<0>(interval)),
-               width(get<1>(interval)));
+double width(nI interval) {
+    double max_width = 0;
+    for (int i = 0; i < n; i++) {
+        auto curr_width = width(interval[i]);
+        if (curr_width > max_width) {
+            max_width = curr_width;
+        }
+    }
+
+    return max_width;
 }
 
-IntervalData::IntervalData(tuple<I, I> x) {
+IntervalData::IntervalData(nI x) {
     interval = x;
-    array<double, 2> x_m = {median(get<0>(interval)), median(get<0>(interval))};
+    auto x_m = median(interval);
+
     poly = i2p(interval);
-
-    //cout << "Begin interval data:\n\n";
-    //print_points(poly);
-
-    //print_points(A(x_m, poly));
-    //print_points(B(x_m, U));
-    //print_points(i2p(Phi(interval, x_m)));
-    //print_points(i2p(Psi(interval, x_m, U)));
-    //print_points(i2p(Phi(interval, x_m)) + i2p(Psi(interval, x_m, U)));
-    //cout << "End interval data:\n\n";
 
     P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m)) + i2p(Psi(interval, x_m, U));
     P_over = P_u_over + B(x_m, U);
 
-    //print_points(A(x_m, poly) + i2p(Phi(interval, x_m)));
-    //print_points(P_over);
     lchild = NULL;
     rchild = NULL;
     invariant = true;
     iter = 0;
 }
 
-array<double, 2> midpoint(tuple<I, I> interval) {
-    return {median(get<0>(interval)),
-            median(get<1>(interval))};
+array<double, n> median(nI interval) {
+    array<double, n> res;
+
+    for (int i = 0; i < n; i++) {
+        res[i] = median(interval[i]);
+    }
+
+    return res;
 }
 
 /*
@@ -342,12 +352,12 @@ C_Polyhedron B(array<double, 2> x, I U) {
     return res;
 }
 
-tuple<I, I> Phi(tuple<I, I> X, array<double, 2> x) {
+nI Phi(nI X, array<double, 2> x) {
     I Phi2 = dt*m*g*l/J*sin(get<0>(X) - cos(x[0])*x[0]);
     return {I(0,0), Phi2};
 }
 
-tuple<I, I> Psi(tuple<I, I> X, array<double, 2> x, I U) {
+nI Psi(nI X, array<double, 2> x, I U) {
     I Psi2 = U*dt*l/J*(cos(get<0>(X)) - cos(x[0]));
     return {I(0,0), Psi2};
 }
@@ -400,11 +410,11 @@ C_Polyhedron B(array<double, 2> x, I U) {
     return res;
 }
 
-tuple<I, I> Phi(tuple<I, I> X, array<double, 2> x) {
+nI Phi(nI X, array<double, 2> x) {
     I Phi2 = -0.25*pow(x[1],3)/10;
     return {I(0,0), Phi2};
 }
 
-tuple<I, I> Psi(tuple<I, I> X, array<double, 2> x, I U) {
+nI Psi(nI X, array<double, 2> x, I U) {
     return {I(0,0), I(0,0)};
 }

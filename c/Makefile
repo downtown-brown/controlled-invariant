@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-O3 -Ofast -Wall -Werror
+CFLAGS=-O3 -Ofast -Wall -Werror -g
 
 SRCDIR=src
 OBJDIR=obj
@@ -15,7 +15,7 @@ OBJ=$(SRC:$(SRCDIR)/%.cc=$(OBJDIR)/%.o)
 all: $(EXE)
 
 $(EXE): $(OBJ) | $(DATADIR)
-	$(CC) $^ -lppl -lgmp -o $@
+	$(CC) $(CFLAGS) $^ -lppl -lgmp -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cc | $(OBJDIR)
 	$(CC) $(CFLAGS) -c $< -o $@

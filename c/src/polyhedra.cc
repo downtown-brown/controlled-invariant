@@ -14,7 +14,7 @@
 #include <vector>
 
 #include <boost/numeric/interval.hpp>
-#include "polyhedra.hh"
+#include "invariant.hh"
 
 
 using namespace Parma_Polyhedra_Library;
@@ -22,8 +22,7 @@ using namespace std;
 using namespace boost::numeric;
 using namespace interval_lib;
 
-typedef interval<double, policies<save_state<rounded_transc_std<double>>,
-                                  checking_base<double>>> I;
+uint64_t counter;
 
 static Variable x(0);
 static Variable y(1);
@@ -32,6 +31,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
                                 vector<C_Polyhedron>::iterator end)
 {
+    counter++;
     vector<C_Polyhedron> res;
 
     P = C_Polyhedron(P);
@@ -60,7 +60,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
 
         tmp.add_constraint(Constraint(-i->coefficient(x)*x
                                       - i->coefficient(y)*y
-                                      - i->inhomogeneous_term() >= 0)); // not done
+                                      - i->inhomogeneous_term() >= 0));
 
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
@@ -393,7 +393,7 @@ bool can_translate_into(C_Polyhedron P,
     }
 }
 
-C_Polyhedron i2p(tuple<I, I> x_int) {
+C_Polyhedron i2p(nI x_int) {
 
     int64_t nl0, dl0;
     rat_approx(get<0>(x_int).lower(), INT16_MAX, &nl0, &dl0);
@@ -458,4 +458,64 @@ C_Polyhedron convexhull(vector<C_Polyhedron> P_v) {
     }
 
     return C_Polyhedron(res.minimized_generators());
+}
+
+void merge_once(list<IntervalData> &Omega) {
+    for (auto Ait = Omega.begin(); Ait != Omega.end(); Ait++) {
+        for (auto Bit = Omega.begin(); Bit != Omega.end(); Bit++) {
+            if (Ait == Bit) {
+                continue;
+            }
+            auto res = merge(*Ait, *Bit);
+            if (res.size() == 1) {
+                *Ait = res.front();
+                Omega.erase(Bit);
+                return;
+            }
+        }
+    }
+}
+
+void merge(list<IntervalData> &Omega) {
+    cout << "Merging list of size " << Omega.size() << endl;
+    auto len = Omega.size();
+    ulong len2 = 0;
+    while (len != len2) {
+        len2 = len;
+        merge_once(Omega);
+        len = Omega.size();
+    }
+    cout << "Reduced size to " << Omega.size() << endl;
+}
+
+list<IntervalData> merge(IntervalData A, IntervalData B) {
+    bool must_be_equal = false;
+    int idx_nequal = 0;
+
+    for (int i = 0; i < n; i++) {
+        if ((A.interval[i].lower() > B.interval[i].upper()) ||
+            (A.interval[i].upper() < B.interval[i].lower())) {
+            return {A, B};
+        } else if ((A.interval[i].lower() != B.interval[i].lower()) ||
+                   (A.interval[i].upper() != B.interval[i].upper())) {
+            if (must_be_equal) {
+                return {A, B};
+            } else {
+                must_be_equal = true;
+                idx_nequal = i;
+            }
+        }
+    }
+
+    auto interval = A.interval;
+
+    if (A.interval[idx_nequal].lower() == B.interval[idx_nequal].upper()) {
+        interval[idx_nequal] = I(B.interval[idx_nequal].lower(),
+                                 A.interval[idx_nequal].upper());
+    } else {
+        interval[idx_nequal] = I(A.interval[idx_nequal].lower(),
+                                 B.interval[idx_nequal].upper());
+    }
+
+    return {IntervalData(interval)};
 }
