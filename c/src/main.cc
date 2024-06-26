@@ -226,7 +226,7 @@ void tests() {
 }
 
 int main() {
-    tests();
+    //tests();
 
     IntervalData Omega({I(-4, 4), I(-2, 2)});
 

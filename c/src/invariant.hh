@@ -94,6 +94,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
 C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N);
 vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N);
 bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
+bool intersects(const C_Polyhedron& A, const C_Polyhedron& B);
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b);
 

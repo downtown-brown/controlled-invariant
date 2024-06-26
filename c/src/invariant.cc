@@ -7,7 +7,7 @@
 #include <vector>
 
 using namespace std;
-#define epsilon 2e-2
+#define epsilon 3e-2
 
 extern uint8_t stop;
 
@@ -75,7 +75,7 @@ list<IntervalData> I_accel(const list<IntervalData>& Omega) {
         L.pop_front();
         num_int++;
 
-        if (!intersects(x.P_over, L_p)) {
+        if (!intersects(x.P_over, Nc)) {
             N.push_back(x);
             Nd.push_back(x.poly);
             j++;
@@ -154,7 +154,7 @@ list<IntervalData> I_approx(const list<IntervalData>& Omega) {
         L.pop_back();
         num_int++;
 
-        if (!intersects(x.P_over, Omega_p)) {
+        if (!intersects(x.P_over, Nc)) {
             N.push_back(x);
             x.status = STATUS_NOT_IN;
         } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
