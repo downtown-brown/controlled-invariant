@@ -492,3 +492,12 @@ list<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
 
     return {IntervalData(interval)};
 }
+
+nI operator+(const nI& A, const nI& B) {
+    nI res;
+    for (int i = 0; i < n; i++) {
+        res[i] = A[i] + B[i];
+    }
+
+    return res;
+}

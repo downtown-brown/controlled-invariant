@@ -97,6 +97,7 @@ bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
 bool intersects(const C_Polyhedron& A, const C_Polyhedron& B);
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b);
+nI operator+(const nI& A, const nI& B);
 
 C_Polyhedron i2p(nI x_int);
 void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom);

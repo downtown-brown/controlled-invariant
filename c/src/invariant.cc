@@ -171,9 +171,9 @@ list<IntervalData> I_approx(const list<IntervalData>& Omega) {
         }
     }
 
-    merge(N);
+    //merge(N);
     merge(S);
-    merge(E);
+    //merge(E);
 
     cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << endl;
 
@@ -235,7 +235,7 @@ IntervalData::IntervalData(nI x) {
 
     poly = i2p(interval);
 
-    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m)) + i2p(Psi(interval, x_m, U));
+    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Psi(interval, x_m, U));
     P_over = P_u_over + B(x_m, U);
 
     lchild = NULL;
