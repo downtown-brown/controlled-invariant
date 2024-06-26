@@ -105,8 +105,8 @@ list<IntervalData> I_accel(const list<IntervalData>& Omega) {
         }
 
         uint8_t stop = 1;
-        for (auto i = L.begin(); i != L.end(); ++i) {
-            if (i->checked != j)
+        for (auto i : L) {
+            if (i.checked != j)
                 stop = 0;
         }
 

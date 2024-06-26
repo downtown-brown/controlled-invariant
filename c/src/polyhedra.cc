@@ -31,7 +31,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
 {
     vector<C_Polyhedron> res;
 
-    for (;;) {
+    while (true) {
 
         auto tmp = C_Polyhedron(P);
         tmp.intersection_assign(*curr);
@@ -81,7 +81,7 @@ bool subset(C_Polyhedron P,
         return true;
     }
 
-    for (;;) {
+    while (true) {
 
         auto tmp = C_Polyhedron(P);
         tmp.intersection_assign(*curr);
@@ -97,14 +97,13 @@ bool subset(C_Polyhedron P,
         }
     }
 
-    auto q_h = curr->constraints();
 
-    for (auto i = q_h.begin(); i != q_h.end(); ++i) {
+    for (auto i : curr->constraints()) {
         auto tmp = C_Polyhedron(P);
 
-        tmp.add_constraint(Constraint(-i->coefficient(x)*x
-                                      - i->coefficient(y)*y
-                                      - i->inhomogeneous_term() >= 0));
+        tmp.add_constraint(Constraint(-i.coefficient(x)*x
+                                      - i.coefficient(y)*y
+                                      - i.inhomogeneous_term() >= 0));
 
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
@@ -116,34 +115,32 @@ bool subset(C_Polyhedron P,
                 return false;
         }
 
-        P.add_constraint(*i);
+        P.add_constraint(i);
     }
 
     return true;
 }
 
 C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
-    C_Polyhedron res(2);
-    auto N_h = N.constraints();
-    auto C_p = C.generators();
-    for (auto n = N_h.begin(); n != N_h.end(); ++n) {
+    C_Polyhedron res(2, EMPTY);
+    for (auto n : N.constraints()) {
         GMP_Integer min = 0;
         GMP_Integer mind = 1;
         GMP_Integer d;
-        for (auto c = C_p.begin(); c != C_p.end(); ++c) {
-            GMP_Integer tmp = n->coefficient(x)*c->coefficient(x)
-                + n->coefficient(y)*c->coefficient(y);
+        for (auto c : C.generators()) {
+            GMP_Integer tmp = n.coefficient(x)*c.coefficient(x)
+                + n.coefficient(y)*c.coefficient(y);
 
-            d = c->divisor();
+            d = c.divisor();
 
             if (tmp*mind < min*d || min == 0) {
                 min = tmp;
                 mind = d;
             }
         }
-        res.add_constraint(n->coefficient(x)*mind*x
-                           + n->coefficient(y)*mind*y
-                           + mind*n->inhomogeneous_term()
+        res.add_constraint(n.coefficient(x)*mind*x
+                           + n.coefficient(y)*mind*y
+                           + mind*n.inhomogeneous_term()
                            + min >= 0);
     }
 
@@ -212,8 +209,8 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
 vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N) {
     vector<C_Polyhedron> res;
 
-    for (auto n = N.begin(); n != N.end(); ++n) {
-        res.emplace_back(translate_touching(C, *n));
+    for (auto n : N) {
+        res.emplace_back(translate_touching(C, n));
     }
 
     return res;
