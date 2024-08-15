@@ -307,6 +307,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
         auto U1 = translate_into(P, Ncc);
         return {U1};
     }
+    return {};
 }
 
 bool can_translate_into(const C_Polyhedron& P,

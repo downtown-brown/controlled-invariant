@@ -5,6 +5,9 @@
 #include <fstream>
 #include <ppl.hh>
 #include <vector>
+#include <mutex>
+#include <atomic>
+#include <thread>
 
 using namespace std;
 #define epsilon 3e-2
@@ -131,8 +134,69 @@ list<IntervalData> I_accel(const list<IntervalData>& Omega) {
     return S;
 }
 
+const int NTHREAD = 24;
+
+atomic<bool> running[NTHREAD];
+mutex L_mutex;
+mutex S_mutex;
+mutex N_mutex;
+mutex E_mutex;
+atomic<int> bcount = 0;
+atomic<uint64_t> num_int = 0;
+void I_worker(list<IntervalData>& L,
+              list<IntervalData>& S,
+              list<IntervalData>& N,
+              list<IntervalData>& E,
+              C_Polyhedron Nc,
+              vector<C_Polyhedron> Nd,
+              int t) {
+    int num_t = 0;
+    while (1) {
+
+        L_mutex.lock();
+        if (L.empty()) {
+            printf("thread %d considered %d intervals\n", t, num_t);
+            L_mutex.unlock();
+            return;
+        }
+        auto x = L.back();
+        L.pop_back();
+        L_mutex.unlock();
+
+        num_int++;
+        num_t++;
+
+        if (!intersects(x.P_over, Nc)) {
+            x.status = STATUS_NOT_IN;
+            N_mutex.lock();
+            N.push_back(x);
+            N_mutex.unlock();
+        } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
+            x.status = STATUS_IN;
+            S_mutex.lock();
+            S.push_back(x);
+            S_mutex.unlock();
+        } else if (!wider_than(x.interval)) {
+            x.status = STATUS_BOUNDARY;
+            E_mutex.lock();
+            E.push_back(x);
+            E_mutex.unlock();
+        } else {
+            bcount++;
+            x.status = STATUS_UNDETERMINED;
+            auto xs = bisect(x);
+            L_mutex.lock();
+            L.push_back(get<0>(xs));
+            L.push_back(get<1>(xs));
+            L_mutex.unlock();
+        }
+    }
+}
+
+
 list<IntervalData> I_approx(const list<IntervalData>& Omega) {
-    uint64_t num_int = 0;
+    bcount = 0;
+    num_int = 0;
     list<IntervalData> S;
     list<IntervalData> N;
     list<IntervalData> E;
@@ -148,34 +212,20 @@ list<IntervalData> I_approx(const list<IntervalData>& Omega) {
     auto Nc = convexhull(Omega_p);
     auto Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
 
-    while (!L.empty()) {
-
-        auto x = L.back();
-        L.pop_back();
-        num_int++;
-
-        if (!intersects(x.P_over, Nc)) {
-            N.push_back(x);
-            x.status = STATUS_NOT_IN;
-        } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
-            S.push_back(x);
-            x.status = STATUS_IN;
-        } else if (!wider_than(x.interval)) {
-            E.push_back(x);
-            x.status = STATUS_BOUNDARY;
-        } else {
-            x.status = STATUS_UNDETERMINED;
-            auto xs = bisect(x);
-            L.push_back(get<0>(xs));
-            L.push_back(get<1>(xs));
-        }
+    vector<thread> thread_vec;
+    for (int t = 0; t < NTHREAD; t++) {
+        thread_vec.emplace_back(make_threadable(I_worker), ref(L), ref(S), ref(N), ref(E), Nc, Nd, t);
+    }
+    for (int t = 0; t < NTHREAD; t++) {
+        thread_vec[t].join();
     }
 
     //merge(N);
     merge(S);
     //merge(E);
 
-    cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << endl;
+    cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << ", B: " << bcount
+         << ", Total: " << N.size() + S.size() + E.size() + bcount << endl;
 
     fprint_points(N, DATADIR + "n" + to_string(kk) + ".txt");
     fprint_points(E, DATADIR + "e" + to_string(kk) + ".txt");
