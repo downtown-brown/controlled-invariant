@@ -22,9 +22,6 @@ static Variable y(1);
 
 uint8_t stop = 0;
 
-double t_ndd_tot = 0;
-double t_sub_tot = 0;
-
 void tests() {
 
     vector<C_Polyhedron> res;
@@ -221,8 +218,6 @@ void tests() {
     }
 
     printf("Computed merge (%ld left) in %.10f seconds\n\n", x10.size(), (double)(end - start)/CLOCKS_PER_SEC / 1000);
-
-
 }
 
 int main() {
@@ -243,9 +238,6 @@ int main() {
     }
     auto end = clock();
     printf("Computed %ld iters I_approx %.10f seconds\n\n", ii, (double)(end - start)/CLOCKS_PER_SEC);
-
-    cout << "Ndd: " << t_ndd_tot << endl
-         << "Subset: " << t_sub_tot << endl;
 
     /*
     print_points(res);

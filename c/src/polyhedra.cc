@@ -59,7 +59,6 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
         }
-
         if (curr < end - 1) {
             auto tmp2 = regiondiff(tmp, curr + 1, end);
             res.insert(res.end(), tmp2.begin(), tmp2.end());
@@ -263,8 +262,6 @@ bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
     return false;
 }
 
-extern double t_ndd_tot;
-extern double t_sub_tot;
 vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                                     const C_Polyhedron& P_over,
                                     const C_Polyhedron& Nc,
@@ -272,7 +269,6 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
     auto Ncc = C_Polyhedron(Nc);
     Ncc.intersection_assign(P_over);
 
-    clock_t start = clock();
     if (!Nd.empty()) {
         auto U1 = translate_into(P, Ncc);
 
@@ -286,12 +282,6 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
             }
         }
 
-        clock_t t1 = clock();
-        //printf("Computed Ndd (%ld -> %ld elements) %.10f seconds\n\n",
-        //       Nd.size(), Ndd.size(), (double)(t1 - start)/CLOCKS_PER_SEC);
-
-        t_ndd_tot += (double)(t1-start)/CLOCKS_PER_SEC;
-
         auto U2 = translate_touching(P, Ndd);
 
         if (U2.empty()) {
@@ -299,10 +289,6 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
         } else {
             return regiondiff(U1, U2.begin(), U2.end());
         }
-        clock_t end = clock();
-        //printf("Computed regiondiff %.10f seconds\n\n", (double)(end - t1)/CLOCKS_PER_SEC);
-        t_sub_tot += (double)(end - t1)/CLOCKS_PER_SEC;
-
     } else {
         auto U1 = translate_into(P, Ncc);
         return {U1};
@@ -317,7 +303,6 @@ bool can_translate_into(const C_Polyhedron& P,
     auto Ncc = C_Polyhedron(Nc);
     Ncc.intersection_assign(P_over);
 
-    clock_t start = clock();
     if (!Nd.empty()) {
         auto U1 = translate_into(P, Ncc);
 
@@ -330,17 +315,8 @@ bool can_translate_into(const C_Polyhedron& P,
             }
         }
 
-        clock_t t1 = clock();
-        t_ndd_tot += (double)(t1-start)/CLOCKS_PER_SEC;
-
         auto U2 = translate_touching(P, Ndd);
-
-        bool res = !subset(U1, U2.begin(), U2.end()) && !U1.is_empty();
-        clock_t end = clock();
-        t_sub_tot += (double)(end - t1)/CLOCKS_PER_SEC;
-
-        return res;
-
+        return !subset(U1, U2.begin(), U2.end()) && !U1.is_empty();
     } else {
         auto U1 = translate_into(P, Ncc);
         return !U1.is_empty();
