@@ -52,9 +52,12 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
     for (const auto& i : curr->constraints()) {
         auto tmp = C_Polyhedron(P);
 
-        tmp.add_constraint(Constraint(-i.coefficient(x)*x
-                                      - i.coefficient(y)*y
-                                      - i.inhomogeneous_term() >= 0));
+        Linear_Expression con_new;
+        for (int j = 0; j < NDIM; j++) {
+            Variable v(j);
+            con_new -= i.coefficient(v)*v;
+        }
+        tmp.add_constraint(con_new - i.inhomogeneous_term() >= 0);
 
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
@@ -101,9 +104,12 @@ bool subset(C_Polyhedron P,
     for (const auto& i : curr->constraints()) {
         auto tmp = C_Polyhedron(P);
 
-        tmp.add_constraint(Constraint(-i.coefficient(x)*x
-                                      - i.coefficient(y)*y
-                                      - i.inhomogeneous_term() >= 0));
+        Linear_Expression con_new;
+        for (int j = 0; j < NDIM; j++) {
+            Variable v(j);
+            con_new -= i.coefficient(v)*v;
+        }
+        tmp.add_constraint(con_new - i.inhomogeneous_term() >= 0);
 
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
@@ -128,8 +134,10 @@ C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
         GMP_Integer mind = 1;
         GMP_Integer d;
         for (const auto& c : C.generators()) {
-            GMP_Integer tmp = n.coefficient(x)*c.coefficient(x)
-                + n.coefficient(y)*c.coefficient(y);
+            GMP_Integer tmp = 0;
+            for (int i = 0; i < NDIM; i++) {
+                tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
+            }
 
             d = c.divisor();
 
@@ -138,10 +146,14 @@ C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
                 mind = d;
             }
         }
-        res.add_constraint(n.coefficient(x)*mind*x
-                           + n.coefficient(y)*mind*y
-                           + mind*n.inhomogeneous_term()
-                           + min >= 0);
+
+        Linear_Expression con_new;
+        for (int i = 0; i < NDIM; i++) {
+            Variable v(i);
+            con_new += n.coefficient(v)*mind*v;
+        }
+
+        res.add_constraint(con_new + mind*n.inhomogeneous_term() + min >= 0);
     }
 
     return res;
@@ -162,13 +174,14 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     GMP_Integer max;
     GMP_Integer maxd;
     GMP_Integer d;
-    GMP_Integer tmp;
     for (const auto& n : N.constraints()) {
         max = 0;
         maxd = 1;
         for (const auto& c : C.generators()) {
-            tmp = n.coefficient(x)*c.coefficient(x)
-                + n.coefficient(y)*c.coefficient(y);
+            GMP_Integer tmp = 0;
+            for (int i = 0; i < NDIM; i++) {
+                tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
+            }
 
             d = c.divisor();
 
@@ -177,18 +190,24 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
                 maxd = d;
             }
         }
-        res.add_constraint(n.coefficient(x)*maxd*x
-                           + n.coefficient(y)*maxd*y
-                           + maxd*n.inhomogeneous_term()
-                           + max >= 0);
+
+        Linear_Expression con_new;
+        for (int i = 0; i < NDIM; i++) {
+            Variable v(i);
+            con_new += n.coefficient(v)*maxd*v;
+        }
+
+        res.add_constraint(con_new + maxd*n.inhomogeneous_term() + max >= 0);
     }
 
     for (const auto& c : C.constraints()) {
         max = 0;
         maxd = 1;
         for (const auto& n : N.generators()) {
-            tmp = c.coefficient(x)*n.coefficient(x)
-                + c.coefficient(y)*n.coefficient(y);
+            GMP_Integer tmp = 0;
+            for (int i = 0; i < NDIM; i++) {
+                tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
+            }
 
             d = n.divisor();
 
@@ -197,10 +216,13 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
                 maxd = d;
             }
         }
-        res.add_constraint(-c.coefficient(x).get_d()*maxd*x
-                           - c.coefficient(y).get_d()*maxd*y
-                           + maxd*c.inhomogeneous_term().get_d()
-                           + max >= 0);
+        Linear_Expression con_new;
+        for (int i = 0; i < NDIM; i++) {
+            Variable v(i);
+            con_new -= c.coefficient(v)*maxd*v;
+        }
+
+        res.add_constraint(con_new + maxd*c.inhomogeneous_term() + max >= 0);
     }
 
     return res;
@@ -220,11 +242,12 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     C_Polyhedron res(2, EMPTY);
     for (const auto& v_a : a.generators()) {
         for (const auto& v_b : b.generators()) {
-            res.add_generator(point((v_a.coefficient(x)*v_b.divisor()
-                                     + v_b.coefficient(x)*v_a.divisor())*x
-                                    + (v_a.coefficient(y)*v_b.divisor()
-                                       + v_b.coefficient(y)*v_a.divisor())*y,
-                                    v_a.divisor()*v_b.divisor()));
+            Linear_Expression tmp;
+            for (int i = 0; i < NDIM; i++) {
+                Variable v(i);
+                tmp += (v_a.coefficient(v)*v_b.divisor() + v_b.coefficient(v)*v_a.divisor())*v;
+            }
+            res.add_generator(point(tmp, v_a.divisor()*v_b.divisor()));
 
         }
     }
@@ -235,9 +258,7 @@ bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
     for (const auto& a : A.constraints()) {
         bool sep = true;
         for (const auto& b : B.generators()) {
-            if (a.coefficient(x)*b.coefficient(x)
-                + a.coefficient(y)*b.coefficient(y)
-                + a.inhomogeneous_term()*b.divisor() >= 0) {
+            if (Scalar_Products::sign(a, b) >= 0) {
                 sep = false;
                 break;
             }
@@ -390,13 +411,14 @@ C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     return C_Polyhedron(res.minimized_generators());
 }
 
+/*
 C_Polyhedron intervalhull(const vector<C_Polyhedron>& P_v) {
     double l0 = HUGE_VAL, l1 = HUGE_VAL, u0 = -HUGE_VAL, u1 = -HUGE_VAL, px, py;
 
     for (const auto& P : P_v) {
         for (const auto& p : P.generators()) {
-            px = p.coefficient(x).get_d() / p.divisor().get_d();
-            py = p.coefficient(y).get_d() / p.divisor().get_d();
+            px = p.coefficient(x).get_mpz_t() / p.divisor().get_mpz_t();
+            py = p.coefficient(y).get_mpz_t() / p.divisor().get_mpz_t();
             if (px < l0)
                 l0 = px;
             if (py < l1)
@@ -410,24 +432,23 @@ C_Polyhedron intervalhull(const vector<C_Polyhedron>& P_v) {
 
     return i2p({I(l0, u0), I(l1, u1)});
 }
+*/
 
-void merge_once(list<IntervalData> &Omega) {
-    for (auto Ait = Omega.begin(); Ait != Omega.end(); Ait++) {
-        for (auto Bit = Omega.begin(); Bit != Omega.end(); Bit++) {
-            if (Ait == Bit) {
-                continue;
-            }
+void merge_once(vector<IntervalData> &Omega) {
+    for (auto Ait = Omega.begin(); Ait != Omega.end() - 1; Ait++) {
+        for (auto Bit = Ait+ 1; Bit != Omega.end(); Bit++) {
             auto res = merge(*Ait, *Bit);
             if (res.size() == 1) {
                 *Ait = res.front();
-                Omega.erase(Bit);
+                *Bit = Omega.back();
+                Omega.pop_back();
                 return;
             }
         }
     }
 }
 
-void merge(list<IntervalData> &Omega) {
+void merge(vector<IntervalData> &Omega) {
     auto len = Omega.size();
     ulong len2 = 0;
     while (len != len2) {
@@ -437,7 +458,7 @@ void merge(list<IntervalData> &Omega) {
     }
 }
 
-list<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
+vector<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
     bool must_be_eq = false;
     int i_n = 0;
 

@@ -5,13 +5,13 @@
 static Variable x(0);
 static Variable y(1);
 
-void print_points(const list<IntervalData>& P) {
+void print_points(const vector<IntervalData>& P) {
     for (const auto& p : P) {
         print_points(p.poly);
     }
 }
 
-void fprint_points(const list<IntervalData>& P, string fname) {
+void fprint_points(const vector<IntervalData>& P, string fname) {
     bool append = false;
     for (const auto& p : P) {
         fprint_points(p.poly, fname, append);
@@ -19,13 +19,13 @@ void fprint_points(const list<IntervalData>& P, string fname) {
     }
 }
 
-void print_over(const list<IntervalData>& P) {
+void print_over(const vector<IntervalData>& P) {
     for (const auto& p : P) {
         print_points(p.P_over);
     }
 }
 
-void print_u_over(const list<IntervalData>& P) {
+void print_u_over(const vector<IntervalData>& P) {
     for (const auto& p : P) {
         print_points(p.P_u_over);
     }

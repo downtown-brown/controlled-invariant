@@ -13,6 +13,8 @@
 
 #define DATADIR (string)"data/"
 
+const int NDIM = 2;
+
 using namespace std;
 using namespace boost::numeric;
 using namespace interval_lib;
@@ -45,8 +47,8 @@ typedef struct IntervalData {
     IntervalData(nI x);
 } IntervalData;
 
-list<IntervalData> I_approx(const list<IntervalData>& Omega);
-list<IntervalData> I_accel(const list<IntervalData>& Omega);
+vector<IntervalData> I_approx(const vector<IntervalData>& Omega);
+vector<IntervalData> I_accel(const vector<IntervalData>& Omega);
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
@@ -62,16 +64,16 @@ nI Phi(nI X, array<double, 2> x);
 
 nI Psi(nI X, array<double, 2> x, I u);
 
-void print_points(const list<IntervalData>& P);
-void print_over(const list<IntervalData>& P);
-void print_u_over(const list<IntervalData>& P);
-void fprint_points(const list<IntervalData>& P, string fname);
+void print_points(const vector<IntervalData>& P);
+void print_over(const vector<IntervalData>& P);
+void print_u_over(const vector<IntervalData>& P);
+void fprint_points(const vector<IntervalData>& P, string fname);
 void print_points(const vector<C_Polyhedron>& P);
 void fprint_points(const vector<C_Polyhedron>& P, string fname);
 void fprint_points(const C_Polyhedron& P, string fname, bool append);
 void print_points(const C_Polyhedron& P);
 
-vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega);
+vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega);
 
 vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
@@ -106,5 +108,5 @@ void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom);
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);
 C_Polyhedron intervalhull(const vector<C_Polyhedron>& P_v);
 
-list<IntervalData> merge(const IntervalData& A, const IntervalData& B);
-void merge(list<IntervalData>& Omega);
+vector<IntervalData> merge(const IntervalData& A, const IntervalData& B);
+void merge(vector<IntervalData>& Omega);

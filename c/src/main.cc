@@ -190,9 +190,9 @@ void tests() {
     IntervalData x5({I(-5, 4), I(3, 4)});
     IntervalData x6({I(4, 14), I(2, 3)});
 
-    list<IntervalData> x10 = {x1,x2,x3,x4,x5,x6};
+    vector<IntervalData> x10 = {x1,x2,x3,x4,x5,x6};
 
-    list<IntervalData> res10;
+    vector<IntervalData> res10;
     start = clock();
     for (int i = 0; i < 1000; i++) {
         res10 = merge(x1,x2);
@@ -221,12 +221,12 @@ void tests() {
 }
 
 int main() {
-    //tests();
+    tests();
 
     IntervalData Omega({I(-4, 4), I(-2, 2)});
 
     auto start = clock();
-    list<IntervalData> res;
+    vector<IntervalData> res;
     uint64_t ii = 0;
     while (!stop) {
         if (ii == 0) {

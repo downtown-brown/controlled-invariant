@@ -17,12 +17,12 @@ extern uint8_t stop;
 uint64_t kk = 0;
 I U(-2, 2);
 
-vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega) {
+vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
     uint64_t num_int = 0;
     vector<vector<C_Polyhedron>> U;
-    list<IntervalData> N;
-    list<IntervalData> E;
-    auto L = list<IntervalData>(Omega);
+    vector<IntervalData> N;
+    vector<IntervalData> E;
+    auto L = vector<IntervalData>(Omega);
 
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
@@ -48,11 +48,11 @@ vector<vector<C_Polyhedron>> U_approx(list<IntervalData> Omega) {
     return U;
 }
 
-list<IntervalData> I_accel(const list<IntervalData>& Omega) {
+vector<IntervalData> I_accel(const vector<IntervalData>& Omega) {
     uint64_t num_int = 0;
-    list<IntervalData> S;
-    list<IntervalData> N;
-    list<IntervalData> E;
+    vector<IntervalData> S;
+    vector<IntervalData> N;
+    vector<IntervalData> E;
     deque<IntervalData> L;
 
     uint32_t j = 0;
@@ -143,10 +143,10 @@ mutex N_mutex;
 mutex E_mutex;
 atomic<int> bcount = 0;
 atomic<uint64_t> num_int = 0;
-void I_worker(list<IntervalData>& L,
-              list<IntervalData>& S,
-              list<IntervalData>& N,
-              list<IntervalData>& E,
+void I_worker(vector<IntervalData>& L,
+              vector<IntervalData>& S,
+              vector<IntervalData>& N,
+              vector<IntervalData>& E,
               C_Polyhedron Nc,
               vector<C_Polyhedron> Nd,
               int t) {
@@ -194,13 +194,13 @@ void I_worker(list<IntervalData>& L,
 }
 
 
-list<IntervalData> I_approx(const list<IntervalData>& Omega) {
+vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     bcount = 0;
     num_int = 0;
-    list<IntervalData> S;
-    list<IntervalData> N;
-    list<IntervalData> E;
-    auto L = list<IntervalData>(Omega);
+    vector<IntervalData> S;
+    vector<IntervalData> N;
+    vector<IntervalData> E;
+    auto L = vector<IntervalData>(Omega);
 
     auto len = Omega.size();
     vector<C_Polyhedron> Omega_p(len);
