@@ -10,7 +10,7 @@
 #include <thread>
 
 using namespace std;
-#define epsilon 3e-2
+#define epsilon 1e-2
 
 extern uint8_t stop;
 
@@ -48,93 +48,8 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
     return U;
 }
 
-vector<IntervalData> I_accel(const vector<IntervalData>& Omega) {
-    uint64_t num_int = 0;
-    vector<IntervalData> S;
-    vector<IntervalData> N;
-    vector<IntervalData> E;
-    deque<IntervalData> L;
 
-    uint32_t j = 0;
-
-    move(
-         begin(Omega),
-         end(Omega),
-         back_inserter(L)
-    );
-
-    auto len = L.size();
-    vector<C_Polyhedron> L_p(len);
-    for (uint64_t i = 0; i < len; i++) {
-        L_p[i] = L[i].poly;
-    }
-    auto Nc = convexhull(L_p);
-    auto Nd = regiondiff(Nc, L_p.begin(), L_p.end());
-
-    int jj = 0;
-    while (1) {
-        jj++;
-        auto x = L.front();
-        L.pop_front();
-        num_int++;
-
-        if (!intersects(x.P_over, Nc)) {
-            N.push_back(x);
-            Nd.push_back(x.poly);
-            j++;
-        } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
-            x.checked = j;
-            L.push_back(x);
-        } else if (!wider_than(x.interval)) {
-            E.push_back(x);
-            Nd.push_back(x.poly);
-            j++;
-        } else {
-            auto xs = bisect(x);
-            L.push_front(get<0>(xs));
-            L.push_front(get<1>(xs));
-        }
-
-        bool stop = true;
-        for (const auto& i : L) {
-            if (i.checked != j) {
-                stop = false;
-                break;
-            }
-        }
-
-        if (stop)
-            break;
-
-        if (jj % 250 == 0) {
-            cout << "Iteration: " << jj << endl;
-        }
-    }
-
-
-    move(
-         begin(L),
-         end(L),
-         back_inserter(S)
-    );
-
-    cout << "N: " << N.size() << ", S: " << S.size() << ", E: " << E.size() << endl;
-    fprint_points(N, DATADIR + "n" + to_string(kk) + ".txt");
-    fprint_points(E, DATADIR + "e" + to_string(kk) + ".txt");
-    fprint_points(S, DATADIR + "s" + to_string(kk) + ".txt");
-
-    kk++;
-    //cout << "Over\n";
-    //print_over(S);
-
-    stop = N.empty() && E.empty();
-
-    cout << "considered " << num_int << " intervals\n";
-
-    return S;
-}
-
-const int NTHREAD = 24;
+const int NTHREAD = 1;
 
 atomic<bool> running[NTHREAD];
 mutex L_mutex;
@@ -372,20 +287,12 @@ nI Psi(nI X, array<double, 2> x, I U) {
 
 C_Polyhedron A(array<double, 2> x, C_Polyhedron P) {
     auto res = C_Polyhedron(P);
-    const int64_t A1_num = 10-1;
-    const int64_t A1_den = 10;
-    const int64_t A2_num = 2;
-    const int64_t A2_den = 1;
-    const int64_t A3_num = 10-3;
-    const int64_t A3_den = 10;
-    const int64_t A4_num = 4;
-    const int64_t A4_den = 1;
+    const int64_t A1 = 10-1;
+    const int64_t A2 = 2;
+    const int64_t A3 = -3;
+    const int64_t A4 = 10+4;
 
-    static int64_t A1 = A1_num*A2_den*A3_den*A4_den;
-    static int64_t A2 = A1_den*A2_num*A3_den*A4_den;
-    static int64_t A3 = A1_den*A2_den*A3_num*A4_den;
-    static int64_t A4 = A1_den*A2_den*A3_den*A4_num;
-    static int64_t den = A1_den*A2_den*A3_den*A4_den;
+    const int64_t den = 10;
 
     res.affine_image(Variable(0), A1*Variable(0) + A2*Variable(1), den);
 
@@ -394,10 +301,9 @@ C_Polyhedron A(array<double, 2> x, C_Polyhedron P) {
 }
 
 C_Polyhedron B(array<double, 2> x, I U) {
-    const int64_t B1_num = 0;
-    //const int64_t B1_den = 1;
-    const int64_t B2_num = -2;
-    const int64_t B2_den = 10;
+    const int64_t B1_num = 5;
+    const int64_t B2_num = -20;
+    const int64_t den = 100;
 
     static uint8_t i = 0;
     static int64_t nl0, dl0;
@@ -409,14 +315,14 @@ C_Polyhedron B(array<double, 2> x, I U) {
     }
 
     C_Polyhedron res(2, EMPTY);
-    res.add_generator(point(B1_num*nl0*Variable(0) + B2_num*nl0*Variable(1), dl0*B2_den));
-    res.add_generator(point(B1_num*nu0*Variable(0) + B2_num*nu0*Variable(1), du0*B2_den));
+    res.add_generator(point(B1_num*nl0*Variable(0) + B2_num*nl0*Variable(1), dl0*den));
+    res.add_generator(point(B1_num*nu0*Variable(0) + B2_num*nu0*Variable(1), du0*den));
 
     return res;
 }
 
 nI Phi(nI X, array<double, 2> x) {
-    I Phi2 = -0.25*pow(x[1],3)/10;
+    I Phi2 = -0.025*pow(x[1],3);
     return {I(0,0), Phi2};
 }
 

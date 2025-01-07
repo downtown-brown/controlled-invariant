@@ -1,5 +1,5 @@
 CC=g++
-CFLAGS=-O3 -Ofast -Wall -Werror -g
+CFLAGS=-O3 -Ofast -Wall -Werror -g -funroll-loops
 
 SRCDIR=src
 OBJDIR=obj

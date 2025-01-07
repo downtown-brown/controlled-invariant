@@ -223,7 +223,7 @@ void tests() {
 int main() {
     tests();
 
-    IntervalData Omega({I(-4, 4), I(-2, 2)});
+    IntervalData Omega({I(-6, 6), I(-6, 6)});
 
     auto start = clock();
     vector<IntervalData> res;
