@@ -285,7 +285,7 @@ nI Psi(nI X, array<double, 2> x, I U) {
 
 
 
-C_Polyhedron A(array<double, 2> x, C_Polyhedron P) {
+inline C_Polyhedron A(array<double, 2> x, C_Polyhedron P) {
     auto res = C_Polyhedron(P);
     const int64_t A1 = 10-1;
     const int64_t A2 = 2;
@@ -300,8 +300,8 @@ C_Polyhedron A(array<double, 2> x, C_Polyhedron P) {
     return res;
 }
 
-C_Polyhedron B(array<double, 2> x, I U) {
-    const int64_t B1_num = 5;
+inline C_Polyhedron B(array<double, 2> x, I U) {
+    const int64_t B1_num = 0;
     const int64_t B2_num = -20;
     const int64_t den = 100;
 
@@ -321,11 +321,11 @@ C_Polyhedron B(array<double, 2> x, I U) {
     return res;
 }
 
-nI Phi(nI X, array<double, 2> x) {
-    I Phi2 = -0.025*pow(x[1],3);
+inline nI Phi(nI X, array<double, 2> x_m) {
+    I Phi2 = -0.025*pow(X[1],3);
     return {I(0,0), Phi2};
 }
 
-nI Psi(nI X, array<double, 2> x, I U) {
+inline nI Psi(nI X, array<double, 2> x, I U) {
     return {I(0,0), I(0,0)};
 }

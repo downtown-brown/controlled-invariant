@@ -60,7 +60,7 @@ C_Polyhedron A(array<double, 2> x, C_Polyhedron P);
 
 C_Polyhedron B(array<double, 2> x, I U);
 
-nI Phi(nI X, array<double, 2> x);
+nI Phi(nI X, array<double, 2> x_m);
 
 nI Psi(nI X, array<double, 2> x, I u);
 
