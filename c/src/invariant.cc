@@ -10,7 +10,7 @@
 #include <thread>
 
 using namespace std;
-#define epsilon 1e-2
+#define epsilon 3e-2
 
 extern uint8_t stop;
 
@@ -48,7 +48,7 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 }
 
 
-const int NTHREAD = 1;
+const int NTHREAD = 12;
 
 atomic<bool> running[NTHREAD];
 mutex L_mutex;
@@ -236,7 +236,7 @@ inline C_Polyhedron A(nvec_t x, C_Polyhedron P) {
 }
 
 inline C_Polyhedron B(nvec_t x, interval_t U) {
-    const int64_t B1_num = 0;
+    const int64_t B1_num = 5;
     const int64_t B2_num = -20;
     const int64_t den = 100;
 
