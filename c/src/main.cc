@@ -28,7 +28,7 @@ uint8_t stop = 0;
 int main() {
     //tests();
 
-    IntervalData Omega({I(-6, 6), I(-6, 6)});
+    IntervalData Omega({interval_t(-6, 6), interval_t(-6, 6)});
 
     auto start = clock();
     vector<IntervalData> res;

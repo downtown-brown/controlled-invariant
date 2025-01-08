@@ -20,12 +20,13 @@ using namespace boost::numeric;
 using namespace interval_lib;
 using namespace Parma_Polyhedra_Library;
 
-constexpr int n = 2;
+const int n = 2;
 
 typedef interval<double, policies<save_state<rounded_transc_std<double>>,
-                                  checking_base<double>>> I;
+                                  checking_base<double>>> interval_t;
 
-typedef array<I, n> nI;
+typedef array<interval_t, n> ninterval_t;
+typedef array<double, n> nvec_t;
 
 enum InvarianceStatus {
     STATUS_IN,
@@ -35,7 +36,7 @@ enum InvarianceStatus {
 };
 
 typedef struct IntervalData {
-    nI interval;
+    ninterval_t interval;
     C_Polyhedron poly;
     C_Polyhedron P_u_over;
     C_Polyhedron P_over;
@@ -44,7 +45,7 @@ typedef struct IntervalData {
     enum InvarianceStatus status;
     int64_t iter;
     uint32_t checked;
-    IntervalData(nI x);
+    IntervalData(ninterval_t x);
 } IntervalData;
 
 vector<IntervalData> I_approx(const vector<IntervalData>& Omega);
@@ -52,17 +53,17 @@ vector<IntervalData> I_accel(const vector<IntervalData>& Omega);
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
-bool wider_than(nI interval);
-array<double, n> median(nI interval);
+bool wider_than(ninterval_t interval);
+array<double, n> median(ninterval_t interval);
 
 
 C_Polyhedron A(array<double, 2> x, C_Polyhedron P);
 
-C_Polyhedron B(array<double, 2> x, I U);
+C_Polyhedron B(array<double, 2> x, interval_t U);
 
-nI Phi(nI X, array<double, 2> x_m);
+ninterval_t Phi(ninterval_t X, array<double, 2> x_m);
 
-nI Psi(nI X, array<double, 2> x, I u);
+ninterval_t Psi(ninterval_t X, array<double, 2> x, interval_t u);
 
 void print_points(const vector<IntervalData>& P);
 void print_over(const vector<IntervalData>& P);
@@ -99,9 +100,9 @@ bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
 bool intersects(const C_Polyhedron& A, const C_Polyhedron& B);
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b);
-nI operator+(const nI& A, const nI& B);
+ninterval_t operator+(const ninterval_t& A, const ninterval_t& B);
 
-C_Polyhedron i2p(nI x_int);
+C_Polyhedron i2p(ninterval_t x_int);
 void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom);
 
 

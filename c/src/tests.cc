@@ -158,7 +158,7 @@ void tests(void) {
 
     printf("Translated C to P \\ P_v: %d in %.15f seconds\n\n",res7, (double)(end - start)/CLOCKS_PER_SEC / 1000);
 
-    nI x = {I(0.1,0.2), I(-0.1, 0.3)};
+    ninterval_t x = {interval_t(0.1,0.2), interval_t(-0.1, 0.3)};
 
     C_Polyhedron res8;
     start = clock();
@@ -180,12 +180,12 @@ void tests(void) {
 
     printf("Computed convex hull of P_v in %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
 
-    IntervalData x1({I(-4, 4), I(-212, 2)});
-    IntervalData x2({I(-4, 4), I(2, 139)});
-    IntervalData x3({I(-4, 4), I(139, 293)});
-    IntervalData x4({I(-3, 4), I(2, 3)});
-    IntervalData x5({I(-5, 4), I(3, 4)});
-    IntervalData x6({I(4, 14), I(2, 3)});
+    IntervalData x1({interval_t(-4, 4), interval_t(-212, 2)});
+    IntervalData x2({interval_t(-4, 4), interval_t(2, 139)});
+    IntervalData x3({interval_t(-4, 4), interval_t(139, 293)});
+    IntervalData x4({interval_t(-3, 4), interval_t(2, 3)});
+    IntervalData x5({interval_t(-5, 4), interval_t(3, 4)});
+    IntervalData x6({interval_t(4, 14), interval_t(2, 3)});
 
     vector<IntervalData> x10 = {x1,x2,x3,x4,x5,x6};
 

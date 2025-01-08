@@ -34,7 +34,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
 
     while (true) {
 
-        auto tmp = C_Polyhedron(P);
+        C_Polyhedron tmp = C_Polyhedron(P);
         tmp.intersection_assign(*curr);
 
         if (tmp.affine_dimension() >= P.affine_dimension()) {
@@ -49,8 +49,8 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
         }
     }
 
-    for (const auto& i : curr->constraints()) {
-        auto tmp = C_Polyhedron(P);
+    for (const Constraint& i : curr->constraints()) {
+        C_Polyhedron tmp = C_Polyhedron(P);
 
         Linear_Expression con_new;
         for (int j = 0; j < NDIM; j++) {
@@ -63,7 +63,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
             continue;
         }
         if (curr < end - 1) {
-            auto tmp2 = regiondiff(tmp, curr + 1, end);
+            vector<C_Polyhedron> tmp2 = regiondiff(tmp, curr + 1, end);
             res.insert(res.end(), tmp2.begin(), tmp2.end());
         }
         else {
@@ -86,7 +86,7 @@ bool subset(C_Polyhedron P,
 
     while (true) {
 
-        auto tmp = C_Polyhedron(P);
+        C_Polyhedron tmp = C_Polyhedron(P);
         tmp.intersection_assign(*curr);
         if (tmp.affine_dimension() >= P.affine_dimension()) {
             //if (!tmp.is_empty()) {
@@ -101,8 +101,8 @@ bool subset(C_Polyhedron P,
     }
 
 
-    for (const auto& i : curr->constraints()) {
-        auto tmp = C_Polyhedron(P);
+    for (const Constraint& i : curr->constraints()) {
+        C_Polyhedron tmp = C_Polyhedron(P);
 
         Linear_Expression con_new;
         for (int j = 0; j < NDIM; j++) {
@@ -129,11 +129,11 @@ bool subset(C_Polyhedron P,
 
 C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
     C_Polyhedron res(2);
-    for (const auto& n : N.constraints()) {
+    for (const Constraint& n : N.constraints()) {
         GMP_Integer min = 0;
         GMP_Integer mind = 1;
         GMP_Integer d;
-        for (const auto& c : C.generators()) {
+        for (const Generator& c : C.generators()) {
             GMP_Integer tmp = 0;
             for (int i = 0; i < NDIM; i++) {
                 tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
@@ -163,8 +163,8 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
                                     const vector<C_Polyhedron>& N,
                                     const C_Polyhedron& D) {
 
-    auto U1 = translate_into(C, D);
-    auto U2 = translate_touching(C, N);
+    C_Polyhedron U1 = translate_into(C, D);
+    vector<C_Polyhedron> U2 = translate_touching(C, N);
 
     return regiondiff(U1, U2.begin(), U2.end());
 }
@@ -174,10 +174,10 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     GMP_Integer max;
     GMP_Integer maxd;
     GMP_Integer d;
-    for (const auto& n : N.constraints()) {
+    for (const Constraint& n : N.constraints()) {
         max = 0;
         maxd = 1;
-        for (const auto& c : C.generators()) {
+        for (const Generator& c : C.generators()) {
             GMP_Integer tmp = 0;
             for (int i = 0; i < NDIM; i++) {
                 tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
@@ -200,10 +200,10 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
         res.add_constraint(con_new + maxd*n.inhomogeneous_term() + max >= 0);
     }
 
-    for (const auto& c : C.constraints()) {
+    for (const Constraint& c : C.constraints()) {
         max = 0;
         maxd = 1;
-        for (const auto& n : N.generators()) {
+        for (const Generator& n : N.generators()) {
             GMP_Integer tmp = 0;
             for (int i = 0; i < NDIM; i++) {
                 tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
@@ -231,7 +231,7 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
 vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N) {
     vector<C_Polyhedron> res;
 
-    for (const auto& n : N) {
+    for (const C_Polyhedron& n : N) {
         res.emplace_back(translate_touching(C, n));
     }
 
@@ -240,8 +240,8 @@ vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Po
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     C_Polyhedron res(2, EMPTY);
-    for (const auto& v_a : a.generators()) {
-        for (const auto& v_b : b.generators()) {
+    for (const Generator& v_a : a.generators()) {
+        for (const Generator& v_b : b.generators()) {
             Linear_Expression tmp;
             for (int i = 0; i < NDIM; i++) {
                 Variable v(i);
@@ -255,9 +255,9 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
 }
 
 bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
-    for (const auto& a : A.constraints()) {
+    for (const Constraint& a : A.constraints()) {
         bool sep = true;
-        for (const auto& b : B.generators()) {
+        for (const Generator& b : B.generators()) {
             if (Scalar_Products::sign(a, b) >= 0) {
                 sep = false;
                 break;
@@ -275,7 +275,7 @@ bool intersects(const C_Polyhedron& A, const C_Polyhedron& B) {
 }
 
 bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
-    for (auto b : B) {
+    for (const C_Polyhedron& b : B) {
         if (intersects(A, b)) {
             return true;
         }
@@ -287,15 +287,15 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                                     const C_Polyhedron& P_over,
                                     const C_Polyhedron& Nc,
                                     const vector<C_Polyhedron>& Nd) {
-    auto Ncc = C_Polyhedron(Nc);
+    C_Polyhedron Ncc = C_Polyhedron(Nc);
     Ncc.intersection_assign(P_over);
 
     if (!Nd.empty()) {
-        auto U1 = translate_into(P, Ncc);
+        C_Polyhedron U1 = translate_into(P, Ncc);
 
         vector<C_Polyhedron> Ndd;
-        for (const auto& d : Nd) {
-            auto tmp = C_Polyhedron(d);
+        for (const C_Polyhedron& d : Nd) {
+            C_Polyhedron tmp = C_Polyhedron(d);
             tmp.intersection_assign(P_over);
 
             if (!tmp.is_empty()) {
@@ -303,7 +303,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
             }
         }
 
-        auto U2 = translate_touching(P, Ndd);
+        vector<C_Polyhedron> U2 = translate_touching(P, Ndd);
 
         if (U2.empty()) {
             return {U1};
@@ -311,7 +311,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
             return regiondiff(U1, U2.begin(), U2.end());
         }
     } else {
-        auto U1 = translate_into(P, Ncc);
+        C_Polyhedron U1 = translate_into(P, Ncc);
         return {U1};
     }
     return {};
@@ -321,30 +321,30 @@ bool can_translate_into(const C_Polyhedron& P,
                         const C_Polyhedron& P_over,
                         const C_Polyhedron& Nc,
                         const vector<C_Polyhedron>& Nd) {
-    auto Ncc = C_Polyhedron(Nc);
+    C_Polyhedron Ncc = C_Polyhedron(Nc);
     Ncc.intersection_assign(P_over);
 
     if (!Nd.empty()) {
-        auto U1 = translate_into(P, Ncc);
+        C_Polyhedron U1 = translate_into(P, Ncc);
 
         vector<C_Polyhedron> Ndd;
-        for (const auto& d : Nd) {
+        for (const C_Polyhedron& d : Nd) {
             if (intersects(P_over, d)) {
-                auto tmp = d;
+                C_Polyhedron tmp = d;
                 tmp.intersection_assign(P_over);
                 Ndd.push_back(tmp);
             }
         }
 
-        auto U2 = translate_touching(P, Ndd);
+        vector<C_Polyhedron> U2 = translate_touching(P, Ndd);
         return !subset(U1, U2.begin(), U2.end()) && !U1.is_empty();
     } else {
-        auto U1 = translate_into(P, Ncc);
+        C_Polyhedron U1 = translate_into(P, Ncc);
         return !U1.is_empty();
     }
 }
 
-C_Polyhedron i2p(nI x_int) {
+C_Polyhedron i2p(ninterval_t x_int) {
 
     int64_t nl0, dl0;
     rat_approx(get<0>(x_int).lower(), INT16_MAX, &nl0, &dl0);
@@ -404,35 +404,12 @@ void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom)
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     C_Polyhedron res(2, EMPTY);
 
-    for (const auto& P : P_v) {
+    for (const C_Polyhedron& P : P_v) {
         res.add_generators(P.generators());
     }
 
     return C_Polyhedron(res.minimized_generators());
 }
-
-/*
-C_Polyhedron intervalhull(const vector<C_Polyhedron>& P_v) {
-    double l0 = HUGE_VAL, l1 = HUGE_VAL, u0 = -HUGE_VAL, u1 = -HUGE_VAL, px, py;
-
-    for (const auto& P : P_v) {
-        for (const auto& p : P.generators()) {
-            px = p.coefficient(x).get_mpz_t() / p.divisor().get_mpz_t();
-            py = p.coefficient(y).get_mpz_t() / p.divisor().get_mpz_t();
-            if (px < l0)
-                l0 = px;
-            if (py < l1)
-                l1 = py;
-            if (px > u0)
-                u0 = px;
-            if (py > u1)
-                u1 = py;
-        }
-    }
-
-    return i2p({I(l0, u0), I(l1, u1)});
-}
-*/
 
 void merge_once(vector<IntervalData> &Omega) {
     for (auto Ait = Omega.begin(); Ait != Omega.end() - 1; Ait++) {
@@ -449,8 +426,8 @@ void merge_once(vector<IntervalData> &Omega) {
 }
 
 void merge(vector<IntervalData> &Omega) {
-    auto len = Omega.size();
-    ulong len2 = 0;
+    int len = Omega.size();
+    int len2 = 0;
     while (len != len2) {
         len2 = len;
         merge_once(Omega);
@@ -480,19 +457,19 @@ vector<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
         }
     }
 
-    auto interval = A.interval;
+    ninterval_t interval = A.interval;
 
     if (A.interval[i_n].lower() == B.interval[i_n].upper()) {
-        interval[i_n] = I(B.interval[i_n].lower(), A.interval[i_n].upper());
+        interval[i_n] = interval_t(B.interval[i_n].lower(), A.interval[i_n].upper());
     } else {
-        interval[i_n] = I(A.interval[i_n].lower(), B.interval[i_n].upper());
+        interval[i_n] = interval_t(A.interval[i_n].lower(), B.interval[i_n].upper());
     }
 
     return {IntervalData(interval)};
 }
 
-nI operator+(const nI& A, const nI& B) {
-    nI res;
+ninterval_t operator+(const ninterval_t& A, const ninterval_t& B) {
+    ninterval_t res;
     for (int i = 0; i < n; i++) {
         res[i] = A[i] + B[i];
     }
