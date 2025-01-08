@@ -80,7 +80,7 @@ bool subset(C_Polyhedron P,
             vector<C_Polyhedron>::iterator curr,
             vector<C_Polyhedron>::iterator end)
 {
-    if (P.is_empty() || curr == end) {
+    if (P.is_empty()) {
         return true;
     }
 
@@ -337,7 +337,11 @@ bool can_translate_into(const C_Polyhedron& P,
         }
 
         vector<C_Polyhedron> U2 = translate_touching(P, Ndd);
-        return !subset(U1, U2.begin(), U2.end()) && !U1.is_empty();
+        if (U2.empty()) {
+            return !U1.is_empty();
+        } else {
+            return !subset(U1, U2.begin(), U2.end());
+        }
     } else {
         C_Polyhedron U1 = translate_into(P, Ncc);
         return !U1.is_empty();
