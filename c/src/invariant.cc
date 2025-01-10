@@ -18,10 +18,7 @@ uint64_t kk = 0;
 interval_t U(-2, 2);
 
 vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
-    uint64_t num_int = 0;
-    vector<vector<C_Polyhedron>> U;
-    vector<IntervalData> N;
-    vector<IntervalData> E;
+    vector<vector<C_Polyhedron>> Uc;
     vector<IntervalData> L = Omega;
 
     vector<C_Polyhedron> Omega_p(Omega.size());
@@ -38,13 +35,12 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 
         IntervalData x = L.back();
         L.pop_back();
-        num_int++;
 
         vector<C_Polyhedron> tmp = translate_into(x.P_u_over, x.P_over, Nc, Nd);
-        U.push_back(tmp);
+        Uc.push_back(tmp);
     }
 
-    return U;
+    return Uc;
 }
 
 
@@ -107,7 +103,6 @@ void I_worker(vector<IntervalData>& L,
     }
 }
 
-
 vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     bcount = 0;
     num_int = 0;
@@ -154,8 +149,6 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     return S;
 }
 
-
-
 pair<IntervalData, IntervalData> bisect(IntervalData x) {
     double max_width = 0;
     int max_dim = 0;
@@ -194,21 +187,6 @@ bool wider_than(ninterval_t interval) {
     return false;
 }
 
-IntervalData::IntervalData(ninterval_t x) {
-    interval = x;
-    nvec_t x_m = median(interval);
-
-    poly = i2p(interval);
-
-    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Psi(interval, x_m, U));
-    P_over = P_u_over + B(x_m, U);
-
-    lchild = NULL;
-    rchild = NULL;
-    status = STATUS_UNDETERMINED;
-    iter = 0;
-}
-
 nvec_t median(ninterval_t x) {
     nvec_t res;
 
@@ -220,39 +198,51 @@ nvec_t median(ninterval_t x) {
 }
 
 inline C_Polyhedron A(nvec_t x, C_Polyhedron P) {
-    const int64_t A1 = 10-1;
-    const int64_t A2 = 2;
-    const int64_t A3 = -3;
-    const int64_t A4 = 10+4;
-    const int64_t den = 10;
+    const int64_t A[n][n] = {{9, 2}, {-3, 14}};
+    const int64_t A_den = 10;
 
     C_Polyhedron res = P;
-    res.affine_image(Variable(0), A1*Variable(0) + A2*Variable(1), den);
-    res.affine_image(Variable(1), den*A3*Variable(0) + (A1*A4 - A2*A3)*Variable(1), A1*den);
+    res.affine_image(Variable(0), A[0][0]*Variable(0) + A[0][1]*Variable(1), A_den);
+    res.affine_image(Variable(1), A_den*A[1][0]*Variable(0)
+                     + (A[0][0]*A[1][1] - A[0][1]*A[1][0])*Variable(1), A[0][0]*A_den);
     return res;
 }
 
 inline C_Polyhedron B(nvec_t x, interval_t U) {
-    const int64_t B1_num = 5;
-    const int64_t B2_num = -20;
-    const int64_t den = 100;
+    const int64_t B[n] = {5, -20};
+    const int64_t B_den = 100;
 
-    const int64_t den2 = INT16_MAX;
-    static int64_t nl0 = rat_approx(U.lower(), den2);
-    static int64_t nu0 = rat_approx(U.upper(), den2);
+    const int64_t U_den = INT16_MAX;
+    static int64_t Ul = rat_approx(U.lower(), U_den);
+    static int64_t Uh = rat_approx(U.upper(), U_den);
 
     C_Polyhedron res(2, EMPTY);
-    res.add_generator(point(B1_num*nl0*Variable(0) + B2_num*nl0*Variable(1), den2*den));
-    res.add_generator(point(B1_num*nu0*Variable(0) + B2_num*nu0*Variable(1), den2*den));
+    res.add_generator(point(B[0]*Ul*Variable(0) + B[1]*Ul*Variable(1), B_den*U_den));
+    res.add_generator(point(B[0]*Uh*Variable(0) + B[1]*Uh*Variable(1), B_den*U_den));
 
     return res;
 }
 
 inline ninterval_t Phi(ninterval_t x, nvec_t x_m) {
-    interval_t Phi2 = -0.025*pow(x[1],3);
-    return {interval_t(0,0), Phi2};
+    return {interval_t(0,0), -0.025*pow(x[1],3)};
 }
 
 inline ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {
     return {interval_t(0,0), interval_t(0,0)};
+}
+
+IntervalData::IntervalData(ninterval_t x) {
+    interval = x;
+    nvec_t x_m = median(interval);
+
+    poly = i2p(interval);
+
+    static C_Polyhedron BU = B(x_m, U);
+    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m));
+    P_over = P_u_over + BU;
+
+    lchild = NULL;
+    rchild = NULL;
+    status = STATUS_UNDETERMINED;
+    iter = 0;
 }

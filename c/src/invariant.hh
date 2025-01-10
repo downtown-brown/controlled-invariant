@@ -56,15 +56,6 @@ pair<IntervalData, IntervalData> bisect(IntervalData x);
 bool wider_than(ninterval_t interval);
 array<double, n> median(ninterval_t interval);
 
-
-C_Polyhedron A(array<double, 2> x, C_Polyhedron P);
-
-C_Polyhedron B(array<double, 2> x, interval_t U);
-
-ninterval_t Phi(ninterval_t X, array<double, 2> x_m);
-
-ninterval_t Psi(ninterval_t X, array<double, 2> x, interval_t u);
-
 void print_points(const vector<IntervalData>& P);
 void fprint_points(const vector<IntervalData>& P, string fname);
 void print_points(const vector<C_Polyhedron>& P);
