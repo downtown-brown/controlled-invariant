@@ -153,7 +153,7 @@ pair<IntervalData, IntervalData> bisect(IntervalData x) {
     double max_width = 0;
     int max_dim = 0;
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < NDIM; i++) {
         double curr_width = width(x.interval[i]);
         if (curr_width > max_width) {
             max_width = curr_width;
@@ -178,7 +178,7 @@ pair<IntervalData, IntervalData> bisect(IntervalData x) {
 }
 
 bool wider_than(ninterval_t interval) {
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < NDIM; i++) {
         if (width(interval[i]) > epsilon) {
             return true;
         }
@@ -190,7 +190,7 @@ bool wider_than(ninterval_t interval) {
 nvec_t median(ninterval_t x) {
     nvec_t res;
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < NDIM; i++) {
         res[i] = median(x[i]);
     }
 
@@ -198,7 +198,7 @@ nvec_t median(ninterval_t x) {
 }
 
 inline C_Polyhedron A(nvec_t x, C_Polyhedron P) {
-    const int64_t A[n][n] = {{9, 2}, {-3, 14}};
+    const int64_t A[NDIM][NDIM] = {{9, 2}, {-3, 14}};
     const int64_t A_den = 10;
 
     C_Polyhedron res = P;
@@ -209,7 +209,7 @@ inline C_Polyhedron A(nvec_t x, C_Polyhedron P) {
 }
 
 inline C_Polyhedron B(nvec_t x, interval_t U) {
-    const int64_t B[n] = {5, -20};
+    const int64_t B[NDIM] = {5, -20};
     const int64_t B_den = 100;
 
     const int64_t U_den = INT16_MAX;
@@ -244,5 +244,4 @@ IntervalData::IntervalData(ninterval_t x) {
     lchild = NULL;
     rchild = NULL;
     status = STATUS_UNDETERMINED;
-    iter = 0;
 }

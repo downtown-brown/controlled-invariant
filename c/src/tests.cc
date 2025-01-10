@@ -187,32 +187,12 @@ void tests(void) {
     IntervalData x5({interval_t(-5, 4), interval_t(3, 4)});
     IntervalData x6({interval_t(4, 14), interval_t(2, 3)});
 
-    vector<IntervalData> x10 = {x1,x2,x3,x4,x5,x6};
-
-    vector<IntervalData> res10;
     start = clock();
     for (int i = 0; i < 1000; i++) {
-        res10 = merge(x1,x2);
-    }
-    end = clock();
-
-    for (auto xi : res10) {
-        cout << "[" << xi.interval[0].lower() << ", " << xi.interval[0].upper()
-             << "] x [" << xi.interval[1].lower() << ", " << xi.interval[1].upper() << "]\n";
-    }
-
-    printf("Computed merge (%ld left) in %.10f seconds\n\n", res10.size(), (double)(end - start)/CLOCKS_PER_SEC / 1000);
-
-    start = clock();
-    for (int i = 0; i < 1000; i++) {
+        vector<IntervalData> x10 = {x1,x2,x3,x4,x5,x6};
         merge(x10);
     }
     end = clock();
 
-    for (auto xi : x10) {
-        cout << "[" << xi.interval[0].lower() << ", " << xi.interval[0].upper()
-             << "] x [" << xi.interval[1].lower() << ", " << xi.interval[1].upper() << "]\n";
-    }
-
-    printf("Computed merge (%ld left) in %.10f seconds\n\n", x10.size(), (double)(end - start)/CLOCKS_PER_SEC / 1000);
+    printf("Computed merge in %.10f seconds\n\n", (double)(end - start)/CLOCKS_PER_SEC / 1000);
 }

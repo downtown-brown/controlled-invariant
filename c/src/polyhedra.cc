@@ -384,7 +384,7 @@ optional<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
     bool must_be_eq = false;
     int i_n = 0;
 
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < NDIM; i++) {
         if ((A.interval[i].lower() > B.interval[i].upper()) ||
             (A.interval[i].upper() < B.interval[i].lower())) {
 
@@ -439,7 +439,7 @@ void merge(vector<IntervalData> &Omega) {
 
 ninterval_t operator+(const ninterval_t& A, const ninterval_t& B) {
     ninterval_t res;
-    for (int i = 0; i < n; i++) {
+    for (int i = 0; i < NDIM; i++) {
         res[i] = A[i] + B[i];
     }
 

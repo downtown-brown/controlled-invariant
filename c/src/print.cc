@@ -20,9 +20,9 @@ void print_points(const C_Polyhedron& P, ostream& f) {
     for (const Generator& g : P.generators()) {
         if (g.is_point()) {
             f << "[";
-            for (int i = 0; i < n; i++) {
+            for (int i = 0; i < NDIM; i++) {
                 f << g.coefficient(Variable(i)).get_d() / g.divisor().get_d();
-                if (i < n - 1) f << ",";
+                if (i < NDIM - 1) f << ",";
             }
             f << "];";
         }

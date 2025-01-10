@@ -20,13 +20,11 @@ using namespace boost::numeric;
 using namespace interval_lib;
 using namespace Parma_Polyhedra_Library;
 
-const int n = 2;
-
 typedef interval<double, policies<save_state<rounded_transc_std<double>>,
                                   checking_base<double>>> interval_t;
 
-typedef array<interval_t, n> ninterval_t;
-typedef array<double, n> nvec_t;
+typedef array<interval_t, NDIM> ninterval_t;
+typedef array<double, NDIM> nvec_t;
 
 enum InvarianceStatus {
     STATUS_IN,
@@ -43,8 +41,6 @@ typedef struct IntervalData {
     IntervalData* lchild;
     IntervalData* rchild;
     enum InvarianceStatus status;
-    int64_t iter;
-    uint32_t checked;
     IntervalData(ninterval_t x);
 } IntervalData;
 
@@ -54,7 +50,7 @@ vector<IntervalData> I_accel(const vector<IntervalData>& Omega);
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
 bool wider_than(ninterval_t interval);
-array<double, n> median(ninterval_t interval);
+nvec_t median(ninterval_t interval);
 
 void print_points(const vector<IntervalData>& P);
 void fprint_points(const vector<IntervalData>& P, string fname);
