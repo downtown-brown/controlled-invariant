@@ -158,11 +158,10 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
 
 pair<IntervalData, IntervalData> bisect(IntervalData x) {
     double max_width = 0;
-    double curr_width;
     int max_dim = 0;
 
     for (int i = 0; i < n; i++) {
-        curr_width = width(x.interval[i]);
+        double curr_width = width(x.interval[i]);
         if (curr_width > max_width) {
             max_width = curr_width;
             max_dim = i;
@@ -210,27 +209,25 @@ IntervalData::IntervalData(ninterval_t x) {
     iter = 0;
 }
 
-nvec_t median(ninterval_t interval) {
+nvec_t median(ninterval_t x) {
     nvec_t res;
 
     for (int i = 0; i < n; i++) {
-        res[i] = median(interval[i]);
+        res[i] = median(x[i]);
     }
 
     return res;
 }
 
 inline C_Polyhedron A(nvec_t x, C_Polyhedron P) {
-    C_Polyhedron res = P;
     const int64_t A1 = 10-1;
     const int64_t A2 = 2;
     const int64_t A3 = -3;
     const int64_t A4 = 10+4;
-
     const int64_t den = 10;
 
+    C_Polyhedron res = P;
     res.affine_image(Variable(0), A1*Variable(0) + A2*Variable(1), den);
-
     res.affine_image(Variable(1), den*A3*Variable(0) + (A1*A4 - A2*A3)*Variable(1), A1*den);
     return res;
 }
@@ -251,11 +248,11 @@ inline C_Polyhedron B(nvec_t x, interval_t U) {
     return res;
 }
 
-inline ninterval_t Phi(ninterval_t X, nvec_t x_m) {
-    interval_t Phi2 = -0.025*pow(X[1],3);
+inline ninterval_t Phi(ninterval_t x, nvec_t x_m) {
+    interval_t Phi2 = -0.025*pow(x[1],3);
     return {interval_t(0,0), Phi2};
 }
 
-inline ninterval_t Psi(ninterval_t X, nvec_t x, interval_t U) {
+inline ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {
     return {interval_t(0,0), interval_t(0,0)};
 }
