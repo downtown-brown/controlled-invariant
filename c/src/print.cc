@@ -1,15 +1,16 @@
 #include "invariant.hh"
 #include <fstream>
+#include <ppl.hh>
 
 void print_points(const vector<IntervalData>& P) {
-    for (const auto& p : P) {
+    for (const IntervalData& p : P) {
         print_points(p.poly);
     }
 }
 
 void fprint_points(const vector<IntervalData>& P, string fname) {
     bool append = false;
-    for (const auto& p : P) {
+    for (const IntervalData& p : P) {
         fprint_points(p.poly, fname, append);
         append = true;
     }
@@ -17,7 +18,7 @@ void fprint_points(const vector<IntervalData>& P, string fname) {
 
 void print_points(const C_Polyhedron& P, ostream& f) {
     f << "[";
-    for (const auto& g : P.generators()) {
+    for (const Generator& g : P.generators()) {
         if (g.is_point()) {
             f << "[";
             for (int i = 0; i < n; i++) {
@@ -45,13 +46,13 @@ void fprint_points(const C_Polyhedron& P, string fname, bool append) {
 }
 
 void print_points(const vector<C_Polyhedron>& P) {
-    for (const auto& p : P) {
+    for (const C_Polyhedron& p : P) {
         print_points(p);
     }
 }
 void fprint_points(const vector<C_Polyhedron>& P, string fname) {
     bool append = false;
-    for (const auto& p : P) {
+    for (const C_Polyhedron& p : P) {
         fprint_points(p, fname, append);
         append = true;
     }
