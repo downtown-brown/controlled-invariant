@@ -66,13 +66,11 @@ ninterval_t Phi(ninterval_t X, array<double, 2> x_m);
 ninterval_t Psi(ninterval_t X, array<double, 2> x, interval_t u);
 
 void print_points(const vector<IntervalData>& P);
-void print_over(const vector<IntervalData>& P);
-void print_u_over(const vector<IntervalData>& P);
 void fprint_points(const vector<IntervalData>& P, string fname);
 void print_points(const vector<C_Polyhedron>& P);
 void fprint_points(const vector<C_Polyhedron>& P, string fname);
 void fprint_points(const C_Polyhedron& P, string fname, bool append);
-void print_points(const C_Polyhedron& P);
+void print_points(const C_Polyhedron& P, ostream& f=cout);
 
 vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega);
 

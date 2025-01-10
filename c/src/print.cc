@@ -1,10 +1,6 @@
 #include "invariant.hh"
 #include <fstream>
 
-
-static Variable x(0);
-static Variable y(1);
-
 void print_points(const vector<IntervalData>& P) {
     for (const auto& p : P) {
         print_points(p.poly);
@@ -19,30 +15,22 @@ void fprint_points(const vector<IntervalData>& P, string fname) {
     }
 }
 
-void print_over(const vector<IntervalData>& P) {
-    for (const auto& p : P) {
-        print_points(p.P_over);
-    }
-}
-
-void print_u_over(const vector<IntervalData>& P) {
-    for (const auto& p : P) {
-        print_points(p.P_u_over);
-    }
-}
-
-void print_points(const C_Polyhedron& P) {
-    cout << "[";
+void print_points(const C_Polyhedron& P, ostream& f) {
+    f << "[";
     for (const auto& g : P.generators()) {
         if (g.is_point()) {
-            cout << "[" << g.coefficient(x).get_d() / g.divisor().get_d() << ","
-                 << g.coefficient(y).get_d() / g.divisor().get_d() << "]; ";
+            f << "[";
+            for (int i = 0; i < n; i++) {
+                f << g.coefficient(Variable(i)).get_d() / g.divisor().get_d();
+                if (i < n - 1) f << ",";
+            }
+            f << "];";
         }
         else {
             g.ascii_dump();
         }
     }
-    cout << "\b\b]\n\n";
+    f << "]\n";
 }
 
 void fprint_points(const C_Polyhedron& P, string fname, bool append) {
@@ -53,17 +41,7 @@ void fprint_points(const C_Polyhedron& P, string fname, bool append) {
         f.open(fname);
     }
 
-    f << "[";
-    for (const auto& g : P.generators()) {
-        if (g.is_point()) {
-            f << "[" << g.coefficient(x).get_d() / g.divisor().get_d() << ","
-                 << g.coefficient(y).get_d() / g.divisor().get_d() << "]; ";
-        }
-        else {
-            g.ascii_dump();
-        }
-    }
-    f << "]\n";
+    print_points(P, f);
 }
 
 void print_points(const vector<C_Polyhedron>& P) {
