@@ -103,7 +103,7 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b);
 ninterval_t operator+(const ninterval_t& A, const ninterval_t& B);
 
 C_Polyhedron i2p(ninterval_t x_int);
-void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom);
+int64_t rat_approx(double f, int64_t den);
 
 
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);

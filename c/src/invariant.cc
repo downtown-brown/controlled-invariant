@@ -240,18 +240,13 @@ inline C_Polyhedron B(nvec_t x, interval_t U) {
     const int64_t B2_num = -20;
     const int64_t den = 100;
 
-    static uint8_t i = 0;
-    static int64_t nl0, dl0;
-    static int64_t nu0, du0;
-    if (!i) {
-        rat_approx(U.lower(), INT32_MAX, &nl0, &dl0);
-        rat_approx(U.upper(), INT32_MAX, &nu0, &du0);
-        i = 1;
-    }
+    const int64_t den2 = INT16_MAX;
+    static int64_t nl0 = rat_approx(U.lower(), den2);
+    static int64_t nu0 = rat_approx(U.upper(), den2);
 
     C_Polyhedron res(2, EMPTY);
-    res.add_generator(point(B1_num*nl0*Variable(0) + B2_num*nl0*Variable(1), dl0*den));
-    res.add_generator(point(B1_num*nu0*Variable(0) + B2_num*nu0*Variable(1), du0*den));
+    res.add_generator(point(B1_num*nl0*Variable(0) + B2_num*nl0*Variable(1), den2*den));
+    res.add_generator(point(B1_num*nu0*Variable(0) + B2_num*nu0*Variable(1), den2*den));
 
     return res;
 }

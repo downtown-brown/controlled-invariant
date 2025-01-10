@@ -350,59 +350,23 @@ bool can_translate_into(const C_Polyhedron& P,
 
 C_Polyhedron i2p(ninterval_t x_int) {
 
-    int64_t nl0, dl0;
-    rat_approx(get<0>(x_int).lower(), INT16_MAX, &nl0, &dl0);
-    int64_t nl1, dl1;
-    rat_approx(get<1>(x_int).lower(), INT16_MAX, &nl1, &dl1);
-    int64_t nu0, du0;
-    rat_approx(get<0>(x_int).upper(), INT16_MAX, &nu0, &du0);
-    int64_t nu1, du1;
-    rat_approx(get<1>(x_int).upper(), INT16_MAX, &nu1, &du1);
+    const int64_t den = 1000000;
+    int64_t nl0 = rat_approx(get<0>(x_int).lower(), den);
+    int64_t nl1 = rat_approx(get<1>(x_int).lower(), den);
+    int64_t nu0 = rat_approx(get<0>(x_int).upper(), den);
+    int64_t nu1 = rat_approx(get<1>(x_int).upper(), den);
 
     C_Polyhedron res(2, EMPTY);
-    res.add_generator(point((nl0*dl1)*x + (nl1*dl0)*y, dl0*dl1));
-    res.add_generator(point((nl0*du1)*x + (nu1*dl0)*y, dl0*du1));
-    res.add_generator(point((nu0*dl1)*x + (nl1*du0)*y, du0*dl1));
-    res.add_generator(point((nu0*du1)*x + (nu1*du0)*y, du0*du1));
+    res.add_generator(point(nl0*x + nl1*y, den));
+    res.add_generator(point(nl0*x + nu1*y, den));
+    res.add_generator(point(nu0*x + nl1*y, den));
+    res.add_generator(point(nu0*x + nu1*y, den));
 
     return res;
 }
 
-void rat_approx(double f, int64_t md, int64_t *num, int64_t *denom)
-{
-	/*  a: continued fraction coefficients. */
-	int64_t a, h[3] = { 0, 1, 0 }, k[3] = { 1, 0, 0 };
-	int64_t x, d, n = 1;
-	int i, neg = 0;
-
-	if (md <= 1) { *denom = 1; *num = (int64_t) f; return; }
-
-	if (f < 0) { neg = 1; f = -f; }
-
-	while (f != floor(f) && n < 4611686018427387904) { n <<= 1; f *= 2;}
-	d = f;
-
-	/* continued fraction and check denominator each step */
-	for (i = 0; i < 64; i++) {
-		a = n ? d / n : 0;
-		if (i && !a) break;
-
-		x = d; d = n; n = x % n;
-
-		x = a;
-		if (k[1] * a + k[0] >= md) {
-			x = (md - k[0]) / k[1];
-			if (x * 2 >= a || k[1] >= md)
-				i = 65;
-			else
-				break;
-		}
-
-		h[2] = x * h[1] + h[0]; h[0] = h[1]; h[1] = h[2];
-		k[2] = x * k[1] + k[0]; k[0] = k[1]; k[1] = k[2];
-	}
-	*denom = k[1];
-	*num = neg ? -h[1] : h[1];
+int64_t rat_approx(double f, int64_t den) {
+    return (int64_t) (f * (double) den);
 }
 
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
