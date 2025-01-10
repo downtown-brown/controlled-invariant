@@ -349,19 +349,15 @@ bool can_translate_into(const C_Polyhedron& P,
     }
 }
 
-C_Polyhedron i2p(ninterval_t x_int) {
-
+C_Polyhedron i2p(ninterval_t x) {
     const int64_t den = 1000000;
-    int64_t nl0 = rat_approx(get<0>(x_int).lower(), den);
-    int64_t nl1 = rat_approx(get<1>(x_int).lower(), den);
-    int64_t nu0 = rat_approx(get<0>(x_int).upper(), den);
-    int64_t nu1 = rat_approx(get<1>(x_int).upper(), den);
+    C_Polyhedron res(NDIM);
 
-    C_Polyhedron res(2, EMPTY);
-    res.add_generator(point(nl0*x + nl1*y, den));
-    res.add_generator(point(nl0*x + nu1*y, den));
-    res.add_generator(point(nu0*x + nl1*y, den));
-    res.add_generator(point(nu0*x + nu1*y, den));
+    for (int i = 0; i < NDIM; i++) {
+        Variable v(i);
+        res.add_constraint(den*v - rat_approx(x[i].lower(), den) >= 0);
+        res.add_constraint(den*v - rat_approx(x[i].upper(), den) <= 0);
+    }
 
     return res;
 }
