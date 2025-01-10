@@ -107,5 +107,4 @@ int64_t rat_approx(double f, int64_t den);
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);
 C_Polyhedron intervalhull(const vector<C_Polyhedron>& P_v);
 
-vector<IntervalData> merge(const IntervalData& A, const IntervalData& B);
 void merge(vector<IntervalData>& Omega);

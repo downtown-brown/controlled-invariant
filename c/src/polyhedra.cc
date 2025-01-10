@@ -13,6 +13,7 @@
 #include <time.h>
 #include <type_traits>
 #include <vector>
+#include <optional>
 
 #include <boost/numeric/interval.hpp>
 #include "invariant.hh"
@@ -379,31 +380,7 @@ C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     return C_Polyhedron(res.minimized_generators());
 }
 
-void merge_once(vector<IntervalData> &Omega) {
-    for (auto Ait = Omega.begin(); Ait != Omega.end() - 1; Ait++) {
-        for (auto Bit = Ait+ 1; Bit != Omega.end(); Bit++) {
-            auto res = merge(*Ait, *Bit);
-            if (res.size() == 1) {
-                *Ait = res.front();
-                *Bit = Omega.back();
-                Omega.pop_back();
-                return;
-            }
-        }
-    }
-}
-
-void merge(vector<IntervalData> &Omega) {
-    int len = Omega.size();
-    int len2 = 0;
-    while (len != len2) {
-        len2 = len;
-        merge_once(Omega);
-        len = Omega.size();
-    }
-}
-
-vector<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
+optional<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
     bool must_be_eq = false;
     int i_n = 0;
 
@@ -433,7 +410,31 @@ vector<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
         interval[i_n] = interval_t(A.interval[i_n].lower(), B.interval[i_n].upper());
     }
 
-    return {IntervalData(interval)};
+    return IntervalData(interval);
+}
+
+void merge_once(vector<IntervalData> &Omega) {
+    for (auto Ait = Omega.begin(); Ait != Omega.end() - 1; Ait++) {
+        for (auto Bit = Ait+ 1; Bit != Omega.end(); Bit++) {
+            optional<IntervalData> res = merge(*Ait, *Bit);
+            if (res.has_value()) {
+                *Ait = res.value();
+                *Bit = Omega.back();
+                Omega.pop_back();
+                return;
+            }
+        }
+    }
+}
+
+void merge(vector<IntervalData> &Omega) {
+    int len = Omega.size();
+    int len2 = 0;
+    while (len != len2) {
+        len2 = len;
+        merge_once(Omega);
+        len = Omega.size();
+    }
 }
 
 ninterval_t operator+(const ninterval_t& A, const ninterval_t& B) {

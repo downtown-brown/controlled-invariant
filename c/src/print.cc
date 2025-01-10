@@ -1,6 +1,5 @@
 #include "invariant.hh"
 #include <fstream>
-#include <ppl.hh>
 
 void print_points(const vector<IntervalData>& P) {
     for (const IntervalData& p : P) {
