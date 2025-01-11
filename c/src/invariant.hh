@@ -16,15 +16,17 @@
 const int NDIM = 2;
 
 using namespace std;
-using namespace boost::numeric;
-using namespace interval_lib;
 using namespace Parma_Polyhedra_Library;
 
-typedef interval<double, policies<save_state<rounded_transc_std<double>>,
-                                  checking_base<double>>> interval_t;
+namespace bil = boost::numeric::interval_lib;
+using interval_policy = bil::policies<
+    bil::save_state<bil::rounded_transc_std<double>>,
+    bil::checking_base<double>
+    >;
 
-typedef array<interval_t, NDIM> ninterval_t;
-typedef array<double, NDIM> nvec_t;
+using interval_t = boost::numeric::interval<double, interval_policy>;
+using ninterval_t = array<interval_t, NDIM>;
+using nvec_t = array<double, NDIM>;
 
 enum InvarianceStatus {
     STATUS_IN,

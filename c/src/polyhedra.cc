@@ -21,11 +21,6 @@
 
 using namespace Parma_Polyhedra_Library;
 using namespace std;
-using namespace boost::numeric;
-using namespace interval_lib;
-
-static Variable x(0);
-static Variable y(1);
 
 vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
@@ -367,7 +362,7 @@ int64_t rat_approx(double f, int64_t den) {
 }
 
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
-    C_Polyhedron res(2, EMPTY);
+    C_Polyhedron res(NDIM, EMPTY);
 
     for (const C_Polyhedron& P : P_v) {
         res.add_generators(P.generators());
