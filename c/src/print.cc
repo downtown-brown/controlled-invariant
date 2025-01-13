@@ -1,4 +1,4 @@
-#include <ostream>
+#include <fstream>
 
 #include "set_types.hh"
 #include "print.hh"
@@ -22,7 +22,7 @@ void print_points(const C_Polyhedron& P, ostream& f) {
 }
 
 void fprint_points(const C_Polyhedron& P, string fname, bool append) {
-    ostream f;
+    ofstream f;
     if (append) {
         f.open(fname, ios_base::app);
     } else {
