@@ -1,26 +1,6 @@
-#include <algorithm>
-#include <cfloat>
-#include <climits>
-#include <cmath>
-#include <cstdint>
-#include <ctime>
-#include <fstream>
-#include <ios>
-#include <iterator>
-#include <ppl.hh>
-#include <stdio.h>
-#include <sys/types.h>
-#include <time.h>
-#include <type_traits>
-#include <vector>
 #include <optional>
 
-#include <boost/numeric/interval.hpp>
-#include "invariant.hh"
-
-
-using namespace Parma_Polyhedra_Library;
-using namespace std;
+#include "set_types.hh"
 
 vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
@@ -155,16 +135,6 @@ C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
     return res;
 }
 
-vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
-                                    const vector<C_Polyhedron>& N,
-                                    const C_Polyhedron& D) {
-
-    C_Polyhedron U1 = translate_into(C, D);
-    vector<C_Polyhedron> U2 = translate_touching(C, N);
-
-    return regiondiff(U1, U2.begin(), U2.end());
-}
-
 C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     C_Polyhedron res(2);
     GMP_Integer max;
@@ -232,6 +202,16 @@ vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Po
     }
 
     return res;
+}
+
+vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
+                                    const vector<C_Polyhedron>& N,
+                                    const C_Polyhedron& D) {
+
+    C_Polyhedron U1 = translate_into(C, D);
+    vector<C_Polyhedron> U2 = translate_touching(C, N);
+
+    return regiondiff(U1, U2.begin(), U2.end());
 }
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
@@ -344,6 +324,10 @@ bool can_translate_into(const C_Polyhedron& P,
     }
 }
 
+int64_t rat_approx(double f, int64_t den) {
+    return (int64_t) (f * (double) den);
+}
+
 C_Polyhedron i2p(ninterval_t x) {
     const int64_t den = 1000000;
     C_Polyhedron res(NDIM);
@@ -357,8 +341,24 @@ C_Polyhedron i2p(ninterval_t x) {
     return res;
 }
 
-int64_t rat_approx(double f, int64_t den) {
-    return (int64_t) (f * (double) den);
+bool wider_than(const ninterval_t& x, double epsilon) {
+    for (int i = 0; i < NDIM; i++) {
+        if (width(x[i]) > epsilon) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+nvec_t median(const ninterval_t& x) {
+    nvec_t res;
+
+    for (int i = 0; i < NDIM; i++) {
+        res[i] = median(x[i]);
+    }
+
+    return res;
 }
 
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
@@ -369,6 +369,34 @@ C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     }
 
     return C_Polyhedron(res.minimized_generators());
+}
+
+pair<IntervalData, IntervalData> bisect(IntervalData x) {
+    double max_width = 0;
+    int max_dim = 0;
+
+    for (int i = 0; i < NDIM; i++) {
+        double curr_width = width(x.interval[i]);
+        if (curr_width > max_width) {
+            max_width = curr_width;
+            max_dim = i;
+        }
+    }
+
+    ninterval_t l = x.interval;
+    ninterval_t r = x.interval;
+
+    pair<interval_t, interval_t> tmp = bisect(x.interval[max_dim]);
+
+    l[max_dim] = get<0>(tmp);
+    r[max_dim] = get<1>(tmp);
+
+    IntervalData x_l(l);
+    IntervalData x_r(r);
+    x.lchild = &x_l;
+    x.rchild = &x_r;
+
+    return {x_l, x_r};
 }
 
 optional<IntervalData> merge(const IntervalData& A, const IntervalData& B) {

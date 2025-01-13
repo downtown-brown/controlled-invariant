@@ -1,20 +1,7 @@
-#include <algorithm>
-#include <cstdint>
-#include <iterator>
-#include <ostream>
-#include <ppl.hh>
-#include <stdio.h>
 #include <time.h>
-#include <type_traits>
-#include <vector>
-#include <boost/numeric/interval.hpp>
 
-#include "invariant.hh"
-
-using namespace Parma_Polyhedra_Library;
-using namespace std;
-using namespace boost::numeric;
-using namespace interval_lib;
+#include "set_computations.hh"
+#include "print.hh"
 
 static Variable x(0);
 static Variable y(1);

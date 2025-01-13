@@ -1,19 +1,7 @@
-#include "invariant.hh"
-#include <fstream>
+#include <ostream>
 
-void print_points(const vector<IntervalData>& P) {
-    for (const IntervalData& p : P) {
-        print_points(p.poly);
-    }
-}
-
-void fprint_points(const vector<IntervalData>& P, string fname) {
-    bool append = false;
-    for (const IntervalData& p : P) {
-        fprint_points(p.poly, fname, append);
-        append = true;
-    }
-}
+#include "set_types.hh"
+#include "print.hh"
 
 void print_points(const C_Polyhedron& P, ostream& f) {
     f << "[";
@@ -34,7 +22,7 @@ void print_points(const C_Polyhedron& P, ostream& f) {
 }
 
 void fprint_points(const C_Polyhedron& P, string fname, bool append) {
-    ofstream f;
+    ostream f;
     if (append) {
         f.open(fname, ios_base::app);
     } else {
@@ -42,6 +30,20 @@ void fprint_points(const C_Polyhedron& P, string fname, bool append) {
     }
 
     print_points(P, f);
+}
+
+void print_points(const vector<IntervalData>& P) {
+    for (const IntervalData& p : P) {
+        print_points(p.poly);
+    }
+}
+
+void fprint_points(const vector<IntervalData>& P, string fname) {
+    bool append = false;
+    for (const IntervalData& p : P) {
+        fprint_points(p.poly, fname, append);
+        append = true;
+    }
 }
 
 void print_points(const vector<C_Polyhedron>& P) {
