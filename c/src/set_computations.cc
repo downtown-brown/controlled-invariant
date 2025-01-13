@@ -2,6 +2,35 @@
 
 #include "set_types.hh"
 
+bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
+    for (const Constraint& a : A.constraints()) {
+        bool sep = true;
+        for (const Generator& b : B.generators()) {
+            if (Scalar_Products::sign(a, b) >= 0) {
+                sep = false;
+                break;
+            }
+        }
+        if (sep) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool intersects(const C_Polyhedron& A, const C_Polyhedron& B) {
+    return !has_separating_plane(A, B) && !has_separating_plane(B, A);
+}
+
+bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
+    for (const C_Polyhedron& b : B) {
+        if (intersects(A, b)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
                                 vector<C_Polyhedron>::iterator end)
@@ -9,17 +38,11 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
     vector<C_Polyhedron> res;
 
     while (true) {
-
-        C_Polyhedron tmp = C_Polyhedron(P);
-        tmp.intersection_assign(*curr);
-
-        if (tmp.affine_dimension() >= P.affine_dimension()) {
+        if (intersects(P, *curr)) {
             break;
         }
 
-        ++curr;
-
-        if (curr == end) {
+        if (++curr == end) {
             res.push_back(P);
             return res;
         }
@@ -62,16 +85,11 @@ bool subset(C_Polyhedron P,
 
     while (true) {
 
-        C_Polyhedron tmp = C_Polyhedron(P);
-        tmp.intersection_assign(*curr);
-        if (tmp.affine_dimension() >= P.affine_dimension()) {
-            //if (!tmp.is_empty()) {
+        if (intersects(P, *curr)) {
             break;
         }
 
-        ++curr;
-
-        if (curr == end) {
+        if (++curr == end) {
             return false;
         }
     }
@@ -228,35 +246,6 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
         }
     }
     return C_Polyhedron(res.minimized_generators());
-}
-
-bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
-    for (const Constraint& a : A.constraints()) {
-        bool sep = true;
-        for (const Generator& b : B.generators()) {
-            if (Scalar_Products::sign(a, b) >= 0) {
-                sep = false;
-                break;
-            }
-        }
-        if (sep) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool intersects(const C_Polyhedron& A, const C_Polyhedron& B) {
-    return !has_separating_plane(A, B) && !has_separating_plane(B, A);
-}
-
-bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
-    for (const C_Polyhedron& b : B) {
-        if (intersects(A, b)) {
-            return true;
-        }
-    }
-    return false;
 }
 
 vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
