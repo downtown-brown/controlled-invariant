@@ -2,43 +2,18 @@
 
 #include "set_types.hh"
 
-bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
-    for (const Constraint& a : A.constraints()) {
-        bool sep = true;
-        for (const Generator& b : B.generators()) {
-            if (Scalar_Products::sign(a, b) >= 0) {
-                sep = false;
-                break;
-            }
-        }
-        if (sep) {
-            return true;
-        }
-    }
-    return false;
-}
-
-bool intersects(const C_Polyhedron& A, const C_Polyhedron& B) {
-    return !has_separating_plane(A, B) && !has_separating_plane(B, A);
-}
-
-bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
-    for (const C_Polyhedron& b : B) {
-        if (intersects(A, b)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
                                 vector<C_Polyhedron>::iterator end)
 {
     vector<C_Polyhedron> res;
 
+    /* Skip over polytopes that don't intersect with P */
     while (true) {
-        if (intersects(P, *curr)) {
+        C_Polyhedron tmp = C_Polyhedron(P);
+        tmp.intersection_assign(*curr);
+
+        if (tmp.affine_dimension() >= P.affine_dimension()) {
             break;
         }
 
@@ -48,15 +23,15 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
         }
     }
 
-    for (const Constraint& i : curr->constraints()) {
+    for (const Constraint& c : curr->constraints()) {
         C_Polyhedron tmp = C_Polyhedron(P);
 
         Linear_Expression con_new;
-        for (int j = 0; j < NDIM; j++) {
-            Variable v(j);
-            con_new -= i.coefficient(v)*v;
+        for (int i = 0; i < NDIM; i++) {
+            Variable v(i);
+            con_new -= c.coefficient(v)*v;
         }
-        tmp.add_constraint(con_new - i.inhomogeneous_term() >= 0);
+        tmp.add_constraint(con_new - c.inhomogeneous_term() >= 0);
 
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
@@ -69,7 +44,7 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
             res.push_back(tmp);
         }
 
-        P.add_constraint(i);
+        P.add_constraint(c);
     }
 
     return res;
@@ -79,13 +54,16 @@ bool subset(C_Polyhedron P,
             vector<C_Polyhedron>::iterator curr,
             vector<C_Polyhedron>::iterator end)
 {
+    /* Empty set is a subset of anything */
     if (P.is_empty()) {
         return true;
     }
 
+    /* Skip over polytopes that don't intersect with P */
     while (true) {
-
-        if (intersects(P, *curr)) {
+        C_Polyhedron tmp = C_Polyhedron(P);
+        tmp.intersection_assign(*curr);
+        if (tmp.affine_dimension() >= P.affine_dimension()) {
             break;
         }
 
@@ -95,27 +73,25 @@ bool subset(C_Polyhedron P,
     }
 
 
-    for (const Constraint& i : curr->constraints()) {
+    for (const Constraint& c : curr->constraints()) {
         C_Polyhedron tmp = C_Polyhedron(P);
 
         Linear_Expression con_new;
-        for (int j = 0; j < NDIM; j++) {
-            Variable v(j);
-            con_new -= i.coefficient(v)*v;
+        for (int i = 0; i < NDIM; i++) {
+            Variable v(i);
+            con_new -= c.coefficient(v)*v;
         }
-        tmp.add_constraint(con_new - i.inhomogeneous_term() >= 0);
+        tmp.add_constraint(con_new - c.inhomogeneous_term() >= 0);
 
         if (tmp.affine_dimension() < P.affine_dimension()) {
             continue;
         }
 
-        if (curr == end - 1) {
+        if (curr == end - 1 || !subset(tmp, curr + 1, end)) {
             return false;
-        } else if (!subset(tmp, curr + 1, end)) {
-                return false;
         }
 
-        P.add_constraint(i);
+        P.add_constraint(c);
     }
 
     return true;
@@ -232,6 +208,9 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
     return regiondiff(U1, U2.begin(), U2.end());
 }
 
+/*
+   TODO: speed up using zonotopes
+*/
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     C_Polyhedron res(2, EMPTY);
     for (const Generator& v_a : a.generators()) {
@@ -246,6 +225,38 @@ C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
         }
     }
     return C_Polyhedron(res.minimized_generators());
+}
+
+bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
+    for (const Constraint& a : A.constraints()) {
+        bool sep = true;
+        for (const Generator& b : B.generators()) {
+            if (Scalar_Products::sign(a, b) >= 0) {
+                sep = false;
+                break;
+            }
+        }
+        if (sep) {
+            return true;
+        }
+    }
+    return false;
+}
+
+/*
+  This function only works on full-dimensional polytopes.
+*/
+bool intersects(const C_Polyhedron& A, const C_Polyhedron& B) {
+    return !has_separating_plane(A, B) && !has_separating_plane(B, A);
+}
+
+bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
+    for (const C_Polyhedron& b : B) {
+        if (intersects(A, b)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
