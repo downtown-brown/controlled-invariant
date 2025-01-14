@@ -11,11 +11,7 @@ void tests(void);
 static const string DATA_DIR = "data/";
 static const double epsilon = 3e-2;
 
-static interval_t U(-2, 2);
-static ninterval_t Omega_0 = {interval_t(-6, 6),
-                              interval_t(-6, 6)};
-
-#include "models/jet_engine.hh"
+#include "models/artificial_system.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
     interval = x;
