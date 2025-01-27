@@ -9,9 +9,10 @@
 void tests(void);
 
 static const string DATA_DIR = "data/";
-static const double epsilon = 3e-2;
+static const double epsilon = 1e-3;
 
-#include "models/artificial_system.hh"
+//#include "models/artificial_system.hh"
+#include "models/pendulum_CDC24.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
     interval = x;
