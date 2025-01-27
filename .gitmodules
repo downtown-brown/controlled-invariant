@@ -1,0 +1,4 @@
+[submodule "ppl"]
+	path = ppl
+	url = https://github.com/jfmc/ppl.git
+	branch = devel
