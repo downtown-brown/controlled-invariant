@@ -51,6 +51,11 @@ Simply run `make` in the top level after building and installing the
 dependencies. You should have an executable named `invariant`.
 
 ## Changing the system and parameters
+By default, the program is set up to run the inverted pendulum model
+from our 2024 CDC paper, "Computing Controlled Invariant Sets of
+Nonlinear Control-Affine Systems". The model can be changed by
+modifying line 15 of `src/invriant.cc`.
+
 The system models are defined in header files in the `src/models`
 directory. The model must define several parameters and functions.
 
@@ -70,3 +75,19 @@ directory. The model must define several parameters and functions.
 The functions `A` and `B` are somewhat difficult to write due to the
 idiosyncrasies of the PPL interface. Future plans include a more
 user-friendly interface for defining new models.
+
+Finally, the parameter `epsilon` changes the precision of the
+algorithm. In the future this will be a command-line argument, but for
+now it requires recompiling.
+
+## Interpreting the results
+The program writes its output to the `data` folder. In that folder it
+will create one file for each iteration of the algorithm. Each line of
+the file represents the vertices of a single interval. The union of
+all these intervals is the set which results from that iteration. The
+result of the final iteration is a controlled invariant set. These can
+be loaded into matlab or another plotting software for visualization.
+
+The source code also contains a function `U_approx` which will compute
+the feasible control inputs for the identified invariant set. This
+function is disabled by default and has not been tested in a while.
