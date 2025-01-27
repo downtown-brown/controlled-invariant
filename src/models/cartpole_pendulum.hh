@@ -1,6 +1,6 @@
 //TODO finish model
 
-inline C_Polyhedron A(nvec_t x, C_Polyhedron P) {
+inline C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
     const int64_t A[NDIM][NDIM] = {{10, 1}, {0, 10}};
     const int64_t A_den = 10;
 
@@ -11,7 +11,7 @@ inline C_Polyhedron A(nvec_t x, C_Polyhedron P) {
     return res;
 }
 
-inline C_Polyhedron B(nvec_t x, interval_t U) {
+inline C_Polyhedron B(nvec_t x_m, interval_t U) {
     const int64_t B[NDIM] = {5, -20};
     const int64_t B_den = 100;
 
