@@ -485,34 +485,24 @@ bool comp_intervals(const IntervalData &A, const IntervalData &B, int i) {
     return true;
 }
 
-IntervalData merge_fast(const IntervalData& A, const IntervalData& B, int i_n) {
-    ninterval_t interval = A.interval;
-
-    if (A.interval[i_n].lower() == B.interval[i_n].upper()) {
-        interval[i_n] = interval_t(B.interval[i_n].lower(), A.interval[i_n].upper());
-    } else {
-        interval[i_n] = interval_t(A.interval[i_n].lower(), B.interval[i_n].upper());
-    }
-
-    return IntervalData(interval);
-}
-
 void merge_once_fast(vector<IntervalData> &Omega) {
     std::list<IntervalData> O2;
+    O2 = std::list<IntervalData>(Omega.begin(), Omega.end());
     for (int i = 0; i < NDIM; i++) {
-      std::sort(Omega.begin(), Omega.end(),
-                [i](const IntervalData &A, const IntervalData &B) {
+        O2.sort([i](const IntervalData &A, const IntervalData &B) {
                   return comp_intervals(A, B, i);
                 });
 
-      O2 = std::list<IntervalData>(Omega.begin(), Omega.end());
+        cout << "merging list of size " << O2.size();
 
-        print_points(Omega);
         auto l = O2.begin();
-        auto r = O2.begin();
-        ++r;
+        auto r = std::next(l);
 
+        int iter = 0;
+        int merged = 0;
+        int unmerged = 0;
         while (r != O2.end()) {
+            iter++;
             int k = i;
             bool matching = true;
             for (int j = 0; j < NDIM - 1; j++) {
@@ -520,19 +510,24 @@ void merge_once_fast(vector<IntervalData> &Omega) {
                     || l->interval[k].upper() != r->interval[k].upper()) {
                     l = r++;
                     matching = false;
-                    cout << "no match" << endl;
+                    unmerged++;
                     break;
                 }
                 k = (k + 1) % NDIM;
             }
             if (matching) {
-                *l = merge_fast(*l, *r, i);
-                l = std::next(r);
-                O2.erase(r);
-                r = std::next(l);
+                optional<IntervalData> res = merge(*l, *r);
+                if (res.has_value()) {
+                    *l = res.value();
+                    O2.erase(r);
+                    r = std::next(l);
+                    merged++;
+                } else {
+                    r++;
+                }
             }
-            cout << "matching: " << matching << endl;
         }
+        cout << "iter: " << iter << ", merged: " << merged << ", unmerged: " << unmerged << endl;
     }
     Omega = std::vector<IntervalData>(O2.begin(), O2.end());
 }
@@ -542,12 +537,11 @@ void merge_fast(vector<IntervalData> &Omega) {
     int len2 = 0;
     int iter = 0;
     while (len != len2) {
+        cout << "Merge iter: " << iter << ", len: " << len << endl;
         len2 = len;
         merge_once_fast(Omega);
         len = Omega.size();
         iter++;
-
-        cout << "Merge iter: " << iter << ", len: " << len << endl;
     }
 }
 
