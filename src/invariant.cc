@@ -103,7 +103,7 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
 
     vector<thread> thread_vec;
     for (int t = 0; t < NTHREAD; t++) {
-        if (i == 1) {
+        if (t == 1) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
         thread_vec.emplace_back(make_threadable(I_worker), ref(L), ref(S), Nc, Nd, t);
@@ -113,7 +113,7 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
         thread_vec[t].join();
     }
 
-    merge(S);
+    merge_fast(S);
     fprint_points(S, DATA_DIR + "s" + to_string(i_approx_iter) + ".txt");
 
     cout << "Iteration " << i_approx_iter << ", considered " << num_int << " intervals." << endl;
@@ -147,7 +147,7 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 }
 
 int main() {
-    //tests();
+    tests();
 
     vector<IntervalData> res = {Omega_0};
 
