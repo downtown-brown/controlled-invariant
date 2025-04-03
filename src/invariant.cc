@@ -2,17 +2,17 @@
 #include <atomic>
 #include <thread>
 #include <time.h>
+#include <chrono>
+#include <thread>
 
 #include "set_computations.hh"
 #include "print.hh"
 
 void tests(void);
 
-static const string DATA_DIR = "data/";
-static const double epsilon = 1e-3;
-
 //#include "models/artificial_system.hh"
-#include "models/pendulum_CDC24.hh"
+#include "models/cartpole.hh"
+//#include "models/pendulum_CDC24.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
     interval = x;
@@ -21,7 +21,7 @@ IntervalData::IntervalData(ninterval_t x) {
     poly = i2p(interval);
 
     static C_Polyhedron BU = B(x_m, U);
-    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m));
+    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Delta);
     P_over = P_u_over + BU;
 
     status = STATUS_UNDETERMINED;
@@ -77,6 +77,10 @@ void I_worker(vector<IntervalData>& L,
             L.push_back(get<1>(xs));
             L_mutex.unlock();
         }
+
+        if (num_int % 1000 == 0) {
+            cout << "num_int: " << num_int << endl;
+        }
     }
 }
 
@@ -99,6 +103,9 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
 
     vector<thread> thread_vec;
     for (int t = 0; t < NTHREAD; t++) {
+        if (i == 1) {
+            std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        }
         thread_vec.emplace_back(make_threadable(I_worker), ref(L), ref(S), Nc, Nd, t);
     }
 

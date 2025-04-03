@@ -2,7 +2,7 @@
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
-bool wider_than(const ninterval_t& interval, double epsilon);
+bool wider_than(const ninterval_t& interval, nvec_t epsilon);
 nvec_t median(const ninterval_t& interval);
 
 vector<C_Polyhedron> regiondiff(C_Polyhedron P,

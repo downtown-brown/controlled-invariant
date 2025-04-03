@@ -98,7 +98,7 @@ bool subset(C_Polyhedron P,
 }
 
 C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
-    C_Polyhedron res(2);
+    C_Polyhedron res(NDIM);
     for (const Constraint& n : N.constraints()) {
         GMP_Integer min = 0;
         GMP_Integer mind = 1;
@@ -130,7 +130,7 @@ C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
 }
 
 C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
-    C_Polyhedron res(2);
+    C_Polyhedron res(NDIM);
     GMP_Integer max;
     GMP_Integer maxd;
     GMP_Integer d;
@@ -212,7 +212,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
    TODO: speed up using zonotopes
 */
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
-    C_Polyhedron res(2, EMPTY);
+    C_Polyhedron res(NDIM, EMPTY);
     for (const Generator& v_a : a.generators()) {
         for (const Generator& v_b : b.generators()) {
             Linear_Expression tmp;
@@ -341,9 +341,9 @@ C_Polyhedron i2p(ninterval_t x) {
     return res;
 }
 
-bool wider_than(const ninterval_t& x, double epsilon) {
+bool wider_than(const ninterval_t& x, nvec_t epsilon) {
     for (int i = 0; i < NDIM; i++) {
-        if (width(x[i]) > epsilon) {
+        if (width(x[i]) > epsilon[i]) {
             return true;
         }
     }
