@@ -61,35 +61,55 @@ bool subset(C_Polyhedron P,
         return true;
     }
 
+    /* P is a single point, check if it is contained in any one polytope */
+    if (P.affine_dimension() == 0) {
+        while (curr != end) {
+            if (curr++->contains(P)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /* Skip over polytopes that don't intersect with P */
     while (true) {
+        /* Nothing is a subset of the empty set */
+        if (curr == end) {
+            return false;
+        }
+
         C_Polyhedron tmp = C_Polyhedron(P);
         tmp.intersection_assign(*curr);
-        if (tmp.affine_dimension() >= P.affine_dimension()) {
+
+        /* curr has a non-empty intersection with P */
+        //if (tmp.affine_dimension() >= P.affine_dimension()) {
+        if (!tmp.is_empty()) {
             break;
         }
 
-        if (++curr == end) {
-            return false;
-        }
+        curr++;
     }
 
 
     for (const Constraint& c : curr->constraints()) {
         C_Polyhedron tmp = C_Polyhedron(P);
 
-        Linear_Expression con_new;
+        /* Flip the direction of the constraint */
+        Linear_Expression c_flip;
         for (int i = 0; i < NDIM; i++) {
             Variable v(i);
-            con_new -= c.coefficient(v)*v;
+            c_flip -= c.coefficient(v)*v;
         }
-        tmp.add_constraint(con_new - c.inhomogeneous_term() >= 0);
 
-        if (tmp.affine_dimension() < P.affine_dimension()) {
+        /* Apply the flipped constraint to tmp and check if it is empty */
+        tmp.add_constraint(c_flip - c.inhomogeneous_term() >= 0);
+
+        /* This condition means the constraint will not affect P */
+        if (tmp.is_empty() || tmp.affine_dimension() < P.affine_dimension()) {
             continue;
         }
 
-        if (curr >= end - 1 || !subset(tmp, curr + 1, end)) {
+        if (!subset(tmp, curr + 1, end)) {
             return false;
         }
 
