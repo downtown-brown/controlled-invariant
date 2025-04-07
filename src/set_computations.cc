@@ -89,7 +89,7 @@ bool subset(C_Polyhedron P,
             continue;
         }
 
-        if (curr == end - 1 || !subset(tmp, curr + 1, end)) {
+        if (curr >= end - 1 || !subset(tmp, curr + 1, end)) {
             return false;
         }
 

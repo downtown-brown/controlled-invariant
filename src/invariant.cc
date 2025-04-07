@@ -11,7 +11,11 @@
 void tests(void);
 
 //#include "models/artificial_system.hh"
-#include "models/cartpole.hh"
+//#include "models/jet_engine.hh"
+//#include "models/cart.hh"
+//#include "models/mass_spring_damper.hh"
+#include "models/cartpole_pendulum.hh"
+//#include "models/cartpole.hh"
 //#include "models/pendulum_CDC24.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
@@ -147,7 +151,7 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 }
 
 int main() {
-    tests();
+    //tests();
 
     vector<IntervalData> res = {Omega_0};
 
