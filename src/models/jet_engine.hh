@@ -1,3 +1,6 @@
+static const string DATA_DIR = "data_jet_engine/";
+static const nvec_t epsilon = {1e-2, 1e-2};
+
 static interval_t U(-0.35, 0.35);
 static ninterval_t Omega_0 = {interval_t(-0.2, 0.2),
                               interval_t(-0.2, 0.2)};
@@ -35,3 +38,5 @@ inline ninterval_t Phi(ninterval_t x, nvec_t x_m) {
 inline ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {
     return {interval_t(0,0), interval_t(0,0)};
 }
+
+ninterval_t Delta = {interval_t(0,0), interval_t(-0.025, 0.025)};

@@ -1,4 +1,5 @@
-// TODO double check this
+static const string DATA_DIR = "data_mass_spring_damper/";
+static const nvec_t epsilon = {1e-1, 1e-1};
 
 static interval_t U(-6, 6);
 static ninterval_t Omega_0 = {interval_t(-6, 6),
@@ -36,5 +37,12 @@ ninterval_t Phi(ninterval_t x, nvec_t x_m) {
 }
 
 ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {
-    return {interval_t(0,0), interval_t(0,0)};
+    return {
+        interval_t(0,0), interval_t(0,0)
+    };
 }
+
+ninterval_t Delta = {
+        interval_t(-0.280249560819896, 0.280249560819896)*0.01,
+        interval_t(1.40124780409948, 1.40124780409948)*0.01
+    };
