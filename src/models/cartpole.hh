@@ -1,11 +1,11 @@
 #include <math.h>
 
 static const string DATA_DIR = "data_cartpole/";
-static const nvec_t epsilon = {2e-1, 2e-1, 2e-1, 2e-1};
+static const nvec_t epsilon = {1.5e-1, 1.5e-1, 1.5e-1, 1.5e-1};
 
 static interval_t U(-2, 2);
 static ninterval_t Omega_0 = {
-    interval_t(-1, 1), interval_t(-0.75 * M_PI, 0.75 * M_PI), interval_t(-2, 2),
+    interval_t(-.5, .5), interval_t(-0.75 * M_PI, 0.75 * M_PI), interval_t(-1, 1),
     interval_t(-1.5 * M_PI, 1.5 * M_PI)
 };
 
@@ -37,7 +37,7 @@ inline C_Polyhedron B(nvec_t x_m, interval_t U) {
     const int64_t U_den = INT16_MAX;
     static int64_t Ul = rat_approx(U.lower(), U_den);
     static int64_t Uh = rat_approx(U.upper(), U_den);
-
+q
     C_Polyhedron res(NDIM, EMPTY);
     res.add_generator(point(B[0]*Ul*Variable(0) + B[1]*Ul*Variable(1)
                             + B[2]*Ul*Variable(2) + B[3]*Ul*Variable(3),  B_den*U_den));
@@ -48,7 +48,7 @@ inline C_Polyhedron B(nvec_t x_m, interval_t U) {
 }
 
 inline ninterval_t Phi(ninterval_t x, nvec_t x_m) {
-    return {interval_t(0,0), -0.025*pow(x[1],3)};
+    return {interval_t(0,0), interval_t(0,0)};
 }
 
 inline ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {

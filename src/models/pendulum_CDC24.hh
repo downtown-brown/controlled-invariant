@@ -5,9 +5,6 @@
 #define J 0.006
 #define b 0.1
 
-static const string DATA_DIR = "data_pendulum/";
-static const nvec_t epsilon = {1e-3, 1e-3};
-
 static interval_t U(-0.1, 0.1);
 static ninterval_t Omega_0 = {interval_t(-0.05, 0.05),
                               interval_t(-0.01, 0.01)};
@@ -50,5 +47,3 @@ ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {
     return {interval_t(0,0),
             U*dt*l/J*(cos(x[0]) - cos(x_m[0]))};
 }
-
-ninterval_t Delta = {interval_t(0,0), interval_t(0.0, 0.0)};
