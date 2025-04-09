@@ -1,10 +1,10 @@
 #include <cstdint>
 static const string DATA_DIR = "data_cartpole_pendulum/";
-static const nvec_t epsilon = {2e-2, 5e-2};
+static const nvec_t epsilon = {2e-2, 7e-2};
 
 static interval_t U(-10, 10);
-static ninterval_t Omega_0 = {interval_t(-3, 3),
-                              interval_t(-10, 10)};
+static ninterval_t Omega_0 = {interval_t(-2, 2),
+                              interval_t(-7, 7)};
 
 
 inline C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
