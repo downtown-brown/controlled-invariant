@@ -14,7 +14,8 @@ void tests(void);
 //#include "models/jet_engine.hh"
 //#include "models/cart.hh"
 //#include "models/mass_spring_damper.hh"
-#include "models/cartpole_pendulum.hh"
+//#include "models/cartpole_pendulum.hh"
+#include "models/van_der_pol.hh"
 //#include "models/cartpole.hh"
 //#include "models/pendulum_CDC24.hh"
 
