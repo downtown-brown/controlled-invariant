@@ -182,13 +182,13 @@ start)/CLOCKS_PER_SEC / 1000);
 start)/CLOCKS_PER_SEC / 1000);
   */
 
-    IntervalData x1({interval_t(-4, 4), interval_t(-212, 2)});
-    IntervalData x2({interval_t(-4, 4), interval_t(2, 139)});
-    IntervalData x3({interval_t(-4, 4), interval_t(139, 293)});
-    IntervalData x4({interval_t(-3, 4), interval_t(2, 3)});
-    IntervalData x5({interval_t(-5, 4), interval_t(3, 4)});
-    IntervalData x6({interval_t(4, 14), interval_t(2, 3)});
-    vector<IntervalData> x10 = {x1,x2,x3,x4,x5,x6};
+    ninterval_t x1({interval_t(-4, 4), interval_t(-212, 2)});
+    ninterval_t x2({interval_t(-4, 4), interval_t(2, 139)});
+    ninterval_t x3({interval_t(-4, 4), interval_t(139, 293)});
+    ninterval_t x4({interval_t(-3, 4), interval_t(2, 3)});
+    ninterval_t x5({interval_t(-5, 4), interval_t(3, 4)});
+    ninterval_t x6({interval_t(4, 14), interval_t(2, 3)});
+    vector<ninterval_t> x10 = {x1,x2,x3,x4,x5,x6};
 
     clock_t start = clock();
     for (int i = 0; i < 1000; i++) {
@@ -204,7 +204,7 @@ start)/CLOCKS_PER_SEC / 1000);
     start = clock();
     for (int i = 0; i < 1000; i++) {
         x10 = {x1,x2,x3,x4,x5,x6};
-        std::sort(x10.begin(), x10.end(), [](const IntervalData &A, const IntervalData &B) { return comp_intervals(A, B, 1); });
+        std::sort(x10.begin(), x10.end(), [](const ninterval_t &A, const ninterval_t &B) { return comp_intervals(A, B, 1); });
     }
     end = clock();
 

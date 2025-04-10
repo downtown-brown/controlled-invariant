@@ -4,6 +4,10 @@
 #include "set_types.hh"
 #include "print.hh"
 
+/*
+  Polyhedron computations
+*/
+
 vector<C_Polyhedron> regiondiff(C_Polyhedron P,
                                 vector<C_Polyhedron>::iterator curr,
                                 vector<C_Polyhedron>::iterator end)
@@ -230,9 +234,6 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
     return regiondiff(U1, U2.begin(), U2.end());
 }
 
-/*
-   TODO: speed up using zonotopes
-*/
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
     C_Polyhedron res(NDIM, EMPTY);
     for (const Generator& v_a : a.generators()) {
@@ -279,16 +280,6 @@ bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
         }
     }
     return false;
-}
-
-bool intersects(const ninterval_t& A, const ninterval_t& B) {
-    for (int i = 0; i < NDIM; i++) {
-        if (!overlap(A[i], B[i])) {
-            return false;
-        }
-    }
-
-    return true;
 }
 
 vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
@@ -373,6 +364,21 @@ C_Polyhedron i2p(ninterval_t x) {
     return res;
 }
 
+/*
+  Interval functions
+*/
+
+bool intersects(const ninterval_t& A, const ninterval_t& B) {
+    for (int i = 0; i < NDIM; i++) {
+        if (!overlap(A[i], B[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+
 bool wider_than(const ninterval_t& x, nvec_t epsilon) {
     for (int i = 0; i < NDIM; i++) {
         if (width(x[i]) > epsilon[i]) {
@@ -393,11 +399,11 @@ nvec_t median(const ninterval_t& x) {
     return res;
 }
 
-ninterval_t intervalhull(const vector<IntervalData>& Omega) {
-    ninterval_t res = Omega[0].interval;
-    for (const IntervalData& x: Omega) {
+ninterval_t intervalhull(const vector<ninterval_t>& Omega) {
+    ninterval_t res = Omega[0];
+    for (const ninterval_t& x: Omega) {
         for (int i = 0; i < NDIM; i++) {
-            res[i] = hull(res[i], x.interval[i]);
+            res[i] = hull(res[i], x[i]);
         }
     }
 
@@ -412,6 +418,154 @@ C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v) {
     }
 
     return C_Polyhedron(res.minimized_generators());
+}
+
+optional<ninterval_t> merge(const ninterval_t& A, const ninterval_t& B) {
+    bool must_be_eq = false;
+    int i_n = 0;
+
+    // Check if they might be mergeable
+    for (int i = 0; i < NDIM; i++) {
+        if ((A[i].lower() > B[i].upper()) ||
+            (A[i].upper() < B[i].lower())) {
+
+            return {};
+        }
+    }
+
+    for (int i = 0; i < NDIM; i++) {
+        if ((A[i].lower() != B[i].lower()) ||
+                   (A[i].upper() != B[i].upper())) {
+
+            if (must_be_eq) {
+                return {};
+            } else {
+                must_be_eq = true;
+                i_n = i;
+            }
+        }
+    }
+
+    ninterval_t interval = A;
+
+    if (A[i_n].lower() == B[i_n].upper()) {
+        interval[i_n] = interval_t(B[i_n].lower(), A[i_n].upper());
+    } else {
+        interval[i_n] = interval_t(A[i_n].lower(), B[i_n].upper());
+    }
+
+    return interval;
+}
+
+void merge_once(vector<ninterval_t> &Omega) {
+    for (auto Ait = Omega.begin(); Ait != Omega.end() - 1; Ait++) {
+        for (auto Bit = Ait+ 1; Bit != Omega.end(); Bit++) {
+            optional<ninterval_t> res = merge(*Ait, *Bit);
+            if (res.has_value()) {
+                *Ait = res.value();
+                *Bit = Omega.back();
+                Omega.pop_back();
+                return;
+            }
+        }
+    }
+}
+
+void merge(vector<ninterval_t> &Omega) {
+    int len = Omega.size();
+    int len2 = 0;
+    int iter = 0;
+    while (len != len2) {
+        len2 = len;
+        merge_once(Omega);
+        len = Omega.size();
+        iter++;
+
+        if (iter % 100 == 0) {
+            cout << "Merge iter: " << iter << ", len: " << len << endl;
+        }
+    }
+}
+
+bool comp_intervals(const ninterval_t &A, const ninterval_t &B, int i) {
+    for (int j = 0; j < NDIM; j++) {
+        if (A[i].lower() < B[i].lower()) {
+            return true;
+        } else if (A[i].lower() > B[i].lower()) {
+            return false;
+        } else if (A[i].upper() < B[i].upper()) {
+            return true;
+        } else if (A[i].upper() > B[i].upper()) {
+            return false;
+        }
+        i = (i + 1) % NDIM;
+    }
+
+    if (A[i].upper() <= B[i].lower()) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool merge_fast(ninterval_t& A, const ninterval_t& B, int i_n) {
+    for (int i = 0; i < NDIM; i++) {
+        if (i != i_n && ((A[i].lower() != B[i].lower()) ||
+                         (A[i].upper() != B[i].upper()))) {
+            return false;
+        }
+    }
+
+    if (A[i_n].upper() == B[i_n].lower()) {
+        A[i_n] =
+            interval_t(A[i_n].lower(), B[i_n].upper());
+        return true;
+    } else {
+        return false;
+    }
+}
+
+void merge_once_fast(list<ninterval_t> &Omega) {
+    for (int i = 0; i < NDIM; i++) {
+        Omega.sort([i](const ninterval_t &A, const ninterval_t &B) {
+            return comp_intervals(A, B, i);
+        });
+
+        auto l = Omega.begin();
+        auto r = std::next(l);
+
+        while (r != Omega.end()) {
+            if (merge_fast(*l, *r, (i + NDIM - 1) % NDIM)) {
+                r = Omega.erase(r);
+            } else {
+                l = r++;
+            }
+        }
+    }
+}
+
+void merge_fast(vector<ninterval_t> &Omega) {
+    int len = Omega.size();
+    int len2 = 0;
+    int iter = 0;
+    std::list<ninterval_t> O2(Omega.begin(), Omega.end());
+    while (len != len2) {
+        cout << "Merge iter: " << iter << ", len: " << len << endl;
+        len2 = len;
+        merge_once_fast(O2);
+        len = O2.size();
+        iter++;
+    }
+    Omega = vector<ninterval_t>(O2.begin(), O2.end());
+}
+
+ninterval_t operator+(const ninterval_t& A, const ninterval_t& B) {
+    ninterval_t res;
+    for (int i = 0; i < NDIM; i++) {
+        res[i] = A[i] + B[i];
+    }
+
+    return res;
 }
 
 pair<IntervalData, IntervalData> bisect(IntervalData x) {
@@ -440,157 +594,4 @@ pair<IntervalData, IntervalData> bisect(IntervalData x) {
     x.rchild = &x_r;
 
     return {x_l, x_r};
-}
-
-optional<IntervalData> merge(const IntervalData& A, const IntervalData& B) {
-    bool must_be_eq = false;
-    int i_n = 0;
-
-    // Check if they might be mergeable
-    for (int i = 0; i < NDIM; i++) {
-        if ((A.interval[i].lower() > B.interval[i].upper()) ||
-            (A.interval[i].upper() < B.interval[i].lower())) {
-
-            return {};
-        }
-    }
-
-    for (int i = 0; i < NDIM; i++) {
-        if ((A.interval[i].lower() != B.interval[i].lower()) ||
-                   (A.interval[i].upper() != B.interval[i].upper())) {
-
-            if (must_be_eq) {
-                return {};
-            } else {
-                must_be_eq = true;
-                i_n = i;
-            }
-        }
-    }
-
-    ninterval_t interval = A.interval;
-
-    if (A.interval[i_n].lower() == B.interval[i_n].upper()) {
-        interval[i_n] = interval_t(B.interval[i_n].lower(), A.interval[i_n].upper());
-    } else {
-        interval[i_n] = interval_t(A.interval[i_n].lower(), B.interval[i_n].upper());
-    }
-
-    return IntervalData(interval);
-}
-
-void merge_once(vector<IntervalData> &Omega) {
-    for (auto Ait = Omega.begin(); Ait != Omega.end() - 1; Ait++) {
-        for (auto Bit = Ait+ 1; Bit != Omega.end(); Bit++) {
-            optional<IntervalData> res = merge(*Ait, *Bit);
-            if (res.has_value()) {
-                *Ait = res.value();
-                *Bit = Omega.back();
-                Omega.pop_back();
-                return;
-            }
-        }
-    }
-}
-
-void merge(vector<IntervalData> &Omega) {
-    int len = Omega.size();
-    int len2 = 0;
-    int iter = 0;
-    while (len != len2) {
-        len2 = len;
-        merge_once(Omega);
-        len = Omega.size();
-        iter++;
-
-        if (iter % 100 == 0) {
-            cout << "Merge iter: " << iter << ", len: " << len << endl;
-        }
-    }
-}
-
-bool comp_intervals(const IntervalData &A, const IntervalData &B, int i) {
-    for (int j = 0; j < NDIM; j++) {
-        if (A.interval[i].lower() < B.interval[i].lower()) {
-            return true;
-        } else if (A.interval[i].lower() > B.interval[i].lower()) {
-            return false;
-        } else if (A.interval[i].upper() < B.interval[i].upper()) {
-            return true;
-        } else if (A.interval[i].upper() > B.interval[i].upper()) {
-            return false;
-        }
-        i = (i + 1) % NDIM;
-    }
-
-    if (A.interval[i].upper() <= B.interval[i].lower()) {
-        return true;
-    } else {
-        return false;
-    }
-}
-
-bool merge_fast(IntervalData& A, const IntervalData& B, int i_n) {
-    for (int i = 0; i < NDIM; i++) {
-        if (i != i_n && ((A.interval[i].lower() != B.interval[i].lower()) ||
-                         (A.interval[i].upper() != B.interval[i].upper()))) {
-            return false;
-        }
-    }
-
-    if (A.interval[i_n].upper() == B.interval[i_n].lower()) {
-        A.interval[i_n] =
-            interval_t(A.interval[i_n].lower(), B.interval[i_n].upper());
-        return true;
-    } else {
-        return false;
-    }
-}
-
-void merge_once_fast(list<IntervalData> &Omega) {
-    for (int i = 0; i < NDIM; i++) {
-        Omega.sort([i](const IntervalData &A, const IntervalData &B) {
-            return comp_intervals(A, B, i);
-        });
-
-        auto l = Omega.begin();
-        auto r = std::next(l);
-
-        while (r != Omega.end()) {
-            if (merge_fast(*l, *r, (i + NDIM - 1) % NDIM)) {
-                r = Omega.erase(r);
-            } else {
-                l = r++;
-            }
-        }
-    }
-}
-
-void merge_fast(vector<IntervalData> &Omega) {
-    int len = Omega.size();
-    int len2 = 0;
-    int iter = 0;
-    std::list<IntervalData> O2(Omega.begin(), Omega.end());
-    while (len != len2) {
-        cout << "Merge iter: " << iter << ", len: " << len << endl;
-        len2 = len;
-        merge_once_fast(O2);
-        len = O2.size();
-        iter++;
-    }
-    Omega = vector<IntervalData>(O2.begin(), O2.end());
-
-    /* Other data is out of date after merge */
-    for (IntervalData &x : Omega) {
-        x = IntervalData(x.interval);
-    }
-}
-
-ninterval_t operator+(const ninterval_t& A, const ninterval_t& B) {
-    ninterval_t res;
-    for (int i = 0; i < NDIM; i++) {
-        res[i] = A[i] + B[i];
-    }
-
-    return res;
 }

@@ -27,7 +27,8 @@ enum InvarianceStatus {
     STATUS_UNDETERMINED
 };
 
-typedef struct IntervalData {
+class IntervalData {
+public:
     ninterval_t interval;
     C_Polyhedron poly;
     C_Polyhedron P_u_over;
@@ -36,6 +37,6 @@ typedef struct IntervalData {
     IntervalData* rchild;
     enum InvarianceStatus status;
     IntervalData(ninterval_t x);
-} IntervalData;
+};
 
 #endif

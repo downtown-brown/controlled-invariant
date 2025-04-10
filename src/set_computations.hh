@@ -36,9 +36,9 @@ C_Polyhedron i2p(ninterval_t x_int);
 int64_t rat_approx(double f, int64_t den);
 
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);
-ninterval_t intervalhull(const vector<IntervalData>& Omega);
+ninterval_t intervalhull(const vector<ninterval_t>& Omega);
 
-void merge(vector<IntervalData>& Omega);
-void merge_fast(vector<IntervalData>& Omega);
+void merge(vector<ninterval_t>& Omega);
+void merge_fast(vector<ninterval_t>& Omega);
 
-bool comp_intervals(const IntervalData &A, const IntervalData &B, int i);
+bool comp_intervals(const ninterval_t &A, const ninterval_t &B, int i);

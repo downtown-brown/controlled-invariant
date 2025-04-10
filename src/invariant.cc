@@ -48,10 +48,12 @@ static atomic<uint64_t> num_N = 0;
 static atomic<uint64_t> num_E = 0;
 static atomic<uint64_t> num_B = 0;
 
-void I_worker(vector<IntervalData>& L,
-              vector<IntervalData>& S,
-              vector<IntervalData>& E,
-              vector<IntervalData>& N,
+static vector<ninterval_t> E;
+static vector<ninterval_t> N;
+static vector<ninterval_t> S = {Omega_0};
+
+void I_worker(vector<IntervalData> &L,
+              vector<IntervalData> &L_next,
               C_Polyhedron Nc,
               vector<C_Polyhedron> Nd,
               int t) {
@@ -74,18 +76,19 @@ void I_worker(vector<IntervalData>& L,
             x.status = STATUS_NOT_IN;
             num_N++;
             N_mutex.lock();
-            N.push_back(x);
+            N.push_back(x.interval);
             N_mutex.unlock();
         } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
             x.status = STATUS_IN;
             S_mutex.lock();
-            S.push_back(x);
+            S.push_back(x.interval);
+            L_next.push_back(x);
             S_mutex.unlock();
         } else if (!wider_than(x.interval, epsilon)) {
             x.status = STATUS_BOUNDARY;
             num_E++;
             E_mutex.lock();
-            E.push_back(x);
+            E.push_back(x.interval);
             E_mutex.unlock();
         } else {
             num_B++;
@@ -105,12 +108,10 @@ void I_worker(vector<IntervalData>& L,
     }
 }
 
-vector<IntervalData> E;
-vector<IntervalData> N;
 vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     static uint64_t i_approx_iter = 0;
     vector<IntervalData> L = Omega;
-    vector<IntervalData> S;
+    vector<IntervalData> L_next;
 
     i_approx_iter++;
     num_int = num_N = num_E = num_B = 0;
@@ -126,47 +127,45 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     C_Polyhedron Nc = convexhull(Omega_p);
     vector<C_Polyhedron> Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
 #else
-    ninterval_t hull = intervalhull(Omega);
+    ninterval_t hull = intervalhull(S);
     C_Polyhedron Nc = i2p(hull);
 
     vector<C_Polyhedron> Nd;
 
-    for (const IntervalData& x : N) {
-        if (intersects(x.interval, hull)) {
-            Nd.emplace_back(x.poly);
+    for (const ninterval_t& x : N) {
+        if (intersects(x, hull)) {
+            Nd.emplace_back(i2p(x));
         }
     }
-    for (const IntervalData& x : E) {
-        if (intersects(x.interval, hull)) {
-            Nd.push_back(x.poly);
+    for (const ninterval_t& x : E) {
+        if (intersects(x, hull)) {
+            Nd.push_back(i2p(x));
         }
     }
 #endif // USE_CONVEX_HULL
 
-    N = vector<IntervalData>();
-    E = vector<IntervalData>();
-
-    vector<thread> thread_vec;
+    vector<thread> threads;
     for (int t = 0; t < NTHREAD; t++) {
         if (t == 1) {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
         }
-        thread_vec.emplace_back(make_threadable(I_worker), ref(L), ref(S), ref(E), ref(N), Nc, Nd, t);
+        threads.emplace_back(make_threadable(I_worker), ref(L), ref(L_next), Nc, Nd, t);
     }
 
     for (int t = 0; t < NTHREAD; t++) {
-        thread_vec[t].join();
+        threads[t].join();
     }
 
     merge_fast(S);
     merge_fast(E);
     merge_fast(N);
+
     fprint_points(S, DATA_DIR + "s" + to_string(i_approx_iter) + ".txt");
 
     cout << "Iteration " << i_approx_iter << ", considered " << num_int << " intervals." << endl;
     cout << "N: " << num_N << ", S: " << S.size() << ", E: " << num_E << ", B: " << num_B << endl;
 
-    return S;
+    return L_next;
 }
 
 vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
