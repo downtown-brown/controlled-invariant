@@ -28,7 +28,7 @@ IntervalData::IntervalData(ninterval_t x) {
 
     poly = i2p(interval);
 
-    static C_Polyhedron BU = B(x_m, U);
+    C_Polyhedron BU = B(x_m, U);
     P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Delta);
     P_over = P_u_over + BU;
 
