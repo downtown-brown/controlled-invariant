@@ -27,6 +27,7 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N);
 vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N);
 bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
 bool intersects(const C_Polyhedron& A, const C_Polyhedron& B);
+bool intersects(const ninterval_t& A, const ninterval_t& B);
 
 C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b);
 ninterval_t operator+(const ninterval_t& A, const ninterval_t& B);
@@ -35,6 +36,7 @@ C_Polyhedron i2p(ninterval_t x_int);
 int64_t rat_approx(double f, int64_t den);
 
 C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);
+ninterval_t intervalhull(const vector<IntervalData>& Omega);
 
 void merge(vector<IntervalData>& Omega);
 void merge_fast(vector<IntervalData>& Omega);

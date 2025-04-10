@@ -281,6 +281,16 @@ bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B) {
     return false;
 }
 
+bool intersects(const ninterval_t& A, const ninterval_t& B) {
+    for (int i = 0; i < NDIM; i++) {
+        if (!overlap(A[i], B[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                                     const C_Polyhedron& P_over,
                                     const C_Polyhedron& Nc,
@@ -378,6 +388,17 @@ nvec_t median(const ninterval_t& x) {
 
     for (int i = 0; i < NDIM; i++) {
         res[i] = median(x[i]);
+    }
+
+    return res;
+}
+
+ninterval_t intervalhull(const vector<IntervalData>& Omega) {
+    ninterval_t res = Omega[0].interval;
+    for (const IntervalData& x: Omega) {
+        for (int i = 0; i < NDIM; i++) {
+            res[i] = hull(res[i], x.interval[i]);
+        }
     }
 
     return res;
