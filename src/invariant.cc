@@ -4,6 +4,7 @@
 #include <time.h>
 #include <chrono>
 #include <thread>
+#include <iomanip>
 
 #include "set_computations.hh"
 #include "print.hh"
@@ -40,6 +41,7 @@ static mutex L_mutex;
 static mutex S_mutex;
 static mutex N_mutex;
 static mutex E_mutex;
+static mutex print_mutex;
 static atomic<uint64_t> num_int = 0;
 
 static atomic<uint64_t> num_N = 0;
@@ -96,7 +98,9 @@ void I_worker(vector<IntervalData>& L,
         }
 
         if (num_int % 1000 == 0) {
-            cout << "num_int: " << num_int << endl;
+            print_mutex.lock();
+            cout << "num_int: " << setw(20) << num_int << '\r' << flush;
+            print_mutex.unlock();
         }
     }
 }
@@ -139,8 +143,8 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     }
 #endif // USE_CONVEX_HULL
 
-    N.clear();
-    E.clear();
+    N = vector<IntervalData>();
+    E = vector<IntervalData>();
 
     vector<thread> thread_vec;
     for (int t = 0; t < NTHREAD; t++) {
