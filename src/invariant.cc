@@ -11,14 +11,16 @@
 
 void tests(void);
 
+#define USE_CONVEX_HULL 0
+
 //#include "models/artificial_system.hh"
 //#include "models/jet_engine.hh"
-//#include "models/cart.hh"
+#include "models/cart.hh"
 //#include "models/mass_spring_damper.hh"
 //#include "models/cartpole_pendulum.hh"
 //#include "models/van_der_pol.hh"
 //#include "models/cartpole.hh"
-#include "models/pendubot.hh"
+//#include "models/pendubot.hh"
 //#include "models/pendulum_CDC24.hh"
 //#include "models/robot_exploration.hh"
 
@@ -28,9 +30,8 @@ IntervalData::IntervalData(ninterval_t x) {
 
     poly = i2p(interval);
 
-    C_Polyhedron BU = B(x_m, U);
     P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Delta);
-    P_over = P_u_over + BU;
+    P_over = P_u_over + B(x_m, U);
 
     status = STATUS_UNDETERMINED;
 }
@@ -52,11 +53,9 @@ static vector<ninterval_t> E;
 static vector<ninterval_t> N;
 static vector<ninterval_t> S = {Omega_0};
 
-void I_worker(vector<IntervalData> &L,
-              vector<IntervalData> &L_next,
-              C_Polyhedron Nc,
-              vector<C_Polyhedron> Nd,
-              int t) {
+void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
+              C_Polyhedron Nc, vector<C_Polyhedron> Nd, int t) {
+
     int num_t = 0;
     while (1) {
         L_mutex.lock();
@@ -116,7 +115,7 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     i_approx_iter++;
     num_int = num_N = num_E = num_B = 0;
 
-#ifdef USE_CONVEX_HULL
+#if USE_CONVEX_HULL
     vector<C_Polyhedron> Omega_p(Omega.size());
     int i = 0;
     for (const IntervalData& O : Omega) {
@@ -139,16 +138,15 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     }
     for (const ninterval_t& x : E) {
         if (intersects(x, hull)) {
-            Nd.push_back(i2p(x));
+            Nd.emplace_back(i2p(x));
         }
     }
+
 #endif // USE_CONVEX_HULL
+    S.clear();
 
     vector<thread> threads;
     for (int t = 0; t < NTHREAD; t++) {
-        if (t == 1) {
-            std::this_thread::sleep_for(std::chrono::milliseconds(100));
-        }
         threads.emplace_back(make_threadable(I_worker), ref(L), ref(L_next), Nc, Nd, t);
     }
 
