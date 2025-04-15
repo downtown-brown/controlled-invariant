@@ -42,7 +42,6 @@ C_Polyhedron convexhull(const vector<C_Polyhedron>& P_v);
 ninterval_t intervalhull(const vector<ninterval_t>& Omega);
 
 void merge(vector<ninterval_t>& Omega);
-void merge_fast(vector<ninterval_t>& Omega);
 
 bool comp_intervals(const ninterval_t &A, const ninterval_t &B, int i);
 

@@ -215,7 +215,7 @@ start)/CLOCKS_PER_SEC / 1000);
     start = clock();
     for (int i = 0; i < 1000; i++) {
         x10 = {x1,x2,x3,x4,x5,x6};
-        merge_fast(x10);
+        merge(x10);
     }
     end = clock();
 

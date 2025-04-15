@@ -11,7 +11,7 @@
 
 void tests(void);
 
-#define USE_CONVEX_HULL 1
+#define USE_CONVEX_HULL 0
 
 //#include "models/artificial_system.hh"
 //#include "models/jet_engine.hh"
@@ -149,9 +149,9 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
         threads[t].join();
     }
 
-    merge_fast(S);
-    merge_fast(E);
-    merge_fast(N);
+    merge(S);
+    merge(E);
+    merge(N);
 
     fprint_points(S, DATA_DIR + "s" + to_string(i_approx_iter) + ".txt");
 
