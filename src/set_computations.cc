@@ -329,8 +329,8 @@ C_Polyhedron i2p(ninterval_t x) {
 
     for (int i = 0; i < NDIM; i++) {
         Variable v(i);
-        res.add_constraint(den*v - rat_approx(x[i].lower(), den) >= 0);
-        res.add_constraint(den*v - rat_approx(x[i].upper(), den) <= 0);
+        res.add_constraint(den*v - (rat_approx(x[i].lower(), den) - 1) >= 0);
+        res.add_constraint(den*v - (rat_approx(x[i].upper(), den) + 1) <= 0);
     }
 
     return res;
