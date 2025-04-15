@@ -317,13 +317,13 @@ int64_t rat_approx(double f, int64_t den) {
 }
 
 C_Polyhedron i2p(ninterval_t x) {
-    const int64_t den = 1000000;
+    const int64_t den = 100000000;
     C_Polyhedron res(NDIM);
 
     for (int i = 0; i < NDIM; i++) {
         Variable v(i);
-        res.add_constraint(den*v - (rat_approx(x[i].lower(), den)) >= 0);
-        res.add_constraint(den*v - (rat_approx(x[i].upper(), den)) <= 0);
+        res.add_constraint(den*v - (rat_approx(x[i].lower(), den) - 1) >= 0);
+        res.add_constraint(den*v - (rat_approx(x[i].upper(), den) + 1) <= 0);
     }
 
     return res;

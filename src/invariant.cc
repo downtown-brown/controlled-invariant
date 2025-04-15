@@ -1,5 +1,6 @@
 #include <mutex>
 #include <atomic>
+#include <ppl.hh>
 #include <thread>
 #include <time.h>
 #include <chrono>
@@ -12,7 +13,7 @@
 void tests(void);
 
 //#include "models/artificial_system.hh"
-#include "models/jet_engine.hh"
+//#include "models/jet_engine.hh"
 //#include "models/cart.hh"
 //#include "models/mass_spring_damper.hh"
 //#include "models/cartpole_pendulum.hh"
@@ -20,7 +21,7 @@ void tests(void);
 //#include "models/cartpole.hh"
 //#include "models/pendubot.hh"
 //#include "models/pendulum_CDC24.hh"
-//#include "models/robot_exploration.hh"
+#include "models/robot_exploration.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
     interval = x;
@@ -44,8 +45,8 @@ static atomic<uint64_t> num_N = 0;
 static atomic<uint64_t> num_E = 0;
 static atomic<uint64_t> num_B = 0;
 
-static vector<ninterval_t> N;
-static vector<ninterval_t> S = {Omega_0};
+static vector<ninterval_t> N = N_0;
+static vector<ninterval_t> S;
 
 void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
               C_Polyhedron Nc, vector<C_Polyhedron> Nd, int t) {
@@ -164,7 +165,11 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 
 int main() {
     // tests();
-    vector<IntervalData> res = {Omega_0};
+    vector<IntervalData> res = Omega_0;
+
+    for (auto &x : Omega_0) {
+        S.push_back(x.interval);
+    }
 
     do {
         res = I_approx(res);
