@@ -1,4 +1,8 @@
+#ifndef SET_COMPUTATIONS_HH
+#define SET_COMPUTATIONS_HH
+
 #include "set_types.hh"
+
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
@@ -24,7 +28,6 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
                                     const vector<C_Polyhedron>& N,
                                     const C_Polyhedron& D);
 C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N);
-vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N);
 bool intersects(const C_Polyhedron& A, const vector<C_Polyhedron>& B);
 bool intersects(const C_Polyhedron& A, const C_Polyhedron& B);
 bool intersects(const ninterval_t& A, const ninterval_t& B);
@@ -42,3 +45,17 @@ void merge(vector<ninterval_t>& Omega);
 void merge_fast(vector<ninterval_t>& Omega);
 
 bool comp_intervals(const ninterval_t &A, const ninterval_t &B, int i);
+
+
+template <typename Range>
+vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, Range& N) {
+    vector<C_Polyhedron> res;
+
+    for (const auto& n : N) {
+        res.emplace_back(translate_touching(C, n));
+    }
+
+    return res;
+}
+
+#endif

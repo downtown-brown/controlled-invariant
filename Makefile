@@ -1,6 +1,5 @@
 CC=g++
-CFLAGS=-O3 -Wall -Werror -g
-
+CFLAGS=-O3 -Wall -Werror -g -std=c++20
 SRCDIR=src
 OBJDIR=obj
 DATADIR=data

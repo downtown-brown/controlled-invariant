@@ -1,8 +1,11 @@
 #include <optional>
 #include <list>
+#include <ppl.hh>
+#include <ranges>
 
 #include "set_types.hh"
 #include "print.hh"
+#include "set_computations.hh"
 
 /*
   Polyhedron computations
@@ -82,22 +85,14 @@ bool subset(C_Polyhedron P,
             return false;
         }
 
-        C_Polyhedron tmp = C_Polyhedron(P);
-        tmp.intersection_assign(*curr);
-
-        /* curr has a non-empty intersection with P */
-        //if (tmp.affine_dimension() >= P.affine_dimension()) {
-        if (!tmp.is_empty()) {
+        if (!P.is_disjoint_from(*curr)) {
             break;
         }
 
         curr++;
     }
 
-
     for (const Constraint& c : curr->constraints()) {
-        C_Polyhedron tmp = C_Polyhedron(P);
-
         /* Flip the direction of the constraint */
         Linear_Expression c_flip;
         for (int i = 0; i < NDIM; i++) {
@@ -105,13 +100,13 @@ bool subset(C_Polyhedron P,
             c_flip -= c.coefficient(v)*v;
         }
 
-        /* Apply the flipped constraint to tmp and check if it is empty */
-        tmp.add_constraint(c_flip - c.inhomogeneous_term() >= 0);
-
-        /* This condition means the constraint will not affect P */
-        if (tmp.is_empty() || tmp.affine_dimension() < P.affine_dimension()) {
-            continue;
+        /* This condition means the flipped constraint will not affect P */
+        if (P.relation_with(Constraint(c_flip - c.inhomogeneous_term() > 0)) == Poly_Con_Relation::is_disjoint()) {
+          continue;
         }
+
+        C_Polyhedron tmp = C_Polyhedron(P);
+        tmp.add_constraint(c_flip - c.inhomogeneous_term() >= 0);
 
         if (!subset(tmp, curr + 1, end)) {
             return false;
@@ -214,16 +209,6 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     return res;
 }
 
-vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, const vector<C_Polyhedron>& N) {
-    vector<C_Polyhedron> res;
-
-    for (const C_Polyhedron& n : N) {
-        res.emplace_back(translate_touching(C, n));
-    }
-
-    return res;
-}
-
 vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
                                     const vector<C_Polyhedron>& N,
                                     const C_Polyhedron& D) {
@@ -234,10 +219,10 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& C,
     return regiondiff(U1, U2.begin(), U2.end());
 }
 
-C_Polyhedron operator+(const C_Polyhedron& a, const C_Polyhedron& b) {
+C_Polyhedron operator+(const C_Polyhedron &a, const C_Polyhedron &b) {
     C_Polyhedron res(NDIM, EMPTY);
-    for (const Generator& v_a : a.generators()) {
-        for (const Generator& v_b : b.generators()) {
+    for (const Generator& v_a : a.minimized_generators()) {
+        for (const Generator& v_b : b.minimized_generators()) {
             Linear_Expression tmp;
             for (int i = 0; i < NDIM; i++) {
                 Variable v(i);
@@ -286,7 +271,7 @@ vector<C_Polyhedron> translate_into(const C_Polyhedron& P,
                                     const C_Polyhedron& P_over,
                                     const C_Polyhedron& Nc,
                                     const vector<C_Polyhedron>& Nd) {
-    C_Polyhedron Ncc = C_Polyhedron(Nc);
+    C_Polyhedron Ncc = Nc;
     Ncc.intersection_assign(P_over);
 
     if (!Nd.empty()) {
@@ -320,30 +305,17 @@ bool can_translate_into(const C_Polyhedron& P,
                         const C_Polyhedron& P_over,
                         const C_Polyhedron& Nc,
                         const vector<C_Polyhedron>& Nd) {
-    C_Polyhedron Ncc = C_Polyhedron(Nc);
+    C_Polyhedron Ncc = Nc;
     Ncc.intersection_assign(P_over);
 
-    if (!Nd.empty()) {
-        C_Polyhedron U1 = translate_into(P, Ncc);
+    auto Ndd = Nd | views::filter([P](const C_Polyhedron& x){ return intersects(P, x); });
 
-        vector<C_Polyhedron> Ndd;
-        for (const C_Polyhedron& d : Nd) {
-            if (intersects(P_over, d)) {
-                C_Polyhedron tmp = d;
-                tmp.intersection_assign(P_over);
-                Ndd.push_back(tmp);
-            }
-        }
-
-        vector<C_Polyhedron> U2 = translate_touching(P, Ndd);
-        if (U2.empty()) {
-            return !U1.is_empty();
-        } else {
-            return !subset(U1, U2.begin(), U2.end());
-        }
-    } else {
-        C_Polyhedron U1 = translate_into(P, Ncc);
+    C_Polyhedron U1 = translate_into(P, Ncc);
+    vector<C_Polyhedron> U2 = translate_touching(P, Ndd);
+    if (U2.empty()) {
         return !U1.is_empty();
+    } else {
+        return !subset(U1, U2.begin(), U2.end());
     }
 }
 

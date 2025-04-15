@@ -3,18 +3,33 @@
 #include <ppl.hh>
 
 static const string DATA_DIR = "data_exploration/";
-static const nvec_t epsilon = {5e-1, 5e-1, M_PI/32};
+static const nvec_t epsilon = {5e-1, 5e-1, M_PI/16};
 
-static ninterval_t U = {interval_t(-2, 2), interval_t(-1, 1), interval_t(-0, 0)};
+static ninterval_t U = {interval_t(-2, 2), interval_t(-1, 1),
+                        interval_t(-0, 0)};
+
+
 static vector<IntervalData> Omega_0 = {
-    IntervalData({interval_t(-10, -8), interval_t(-10, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(-8, -4), interval_t(-10, -4), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(-8, -4), interval_t(4, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(-4, 4), interval_t(-10, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(4, 10), interval_t(-10, -4), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(4, 8), interval_t(4, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(8, 10), interval_t(-10, 10), interval_t(-M_PI, M_PI)})
+    IntervalData(
+        {interval_t(-10, -8), interval_t(-10, 10), interval_t(-M_PI, M_PI)}),
+    IntervalData(
+        {interval_t(-8, -4), interval_t(-10, -4), interval_t(-M_PI, M_PI)}),
+    IntervalData(
+        {interval_t(-8, -4), interval_t(4, 10), interval_t(-M_PI, M_PI)}),
+    IntervalData(
+        {interval_t(-4, 4), interval_t(-10, 10), interval_t(-M_PI, M_PI)}),
+    IntervalData(
+        {interval_t(4, 10), interval_t(-10, -4), interval_t(-M_PI, M_PI)}),
+    IntervalData(
+        {interval_t(4, 8), interval_t(4, 10), interval_t(-M_PI, M_PI)}),
+    IntervalData(
+        {interval_t(8, 10), interval_t(-10, 10), interval_t(-M_PI, M_PI)})};
+
+static vector<ninterval_t> N_0 = {
+    {interval_t(-8, -4), interval_t(-4, 4), interval_t(-M_PI, M_PI)},
+    {interval_t(4, 8), interval_t(-4, 4), interval_t(-M_PI, M_PI)}
 };
+
 
 inline C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
     return P;
@@ -48,4 +63,4 @@ inline ninterval_t Psi(ninterval_t x, nvec_t x_m, ninterval_t U) {
     };
 }
 
-ninterval_t Delta = {interval_t(0,0), interval_t(0,0), interval_t(0,0)};
+ninterval_t Delta = {interval_t(-0.1,0.1), interval_t(-0.1,0.1), interval_t(0,0)};

@@ -15,14 +15,14 @@ void tests(void);
 
 //#include "models/artificial_system.hh"
 //#include "models/jet_engine.hh"
-#include "models/cart.hh"
+//#include "models/cart.hh"
 //#include "models/mass_spring_damper.hh"
 //#include "models/cartpole_pendulum.hh"
 //#include "models/van_der_pol.hh"
 //#include "models/cartpole.hh"
 //#include "models/pendubot.hh"
 //#include "models/pendulum_CDC24.hh"
-//#include "models/robot_exploration.hh"
+#include "models/robot_exploration.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
     interval = x;
@@ -50,8 +50,8 @@ static atomic<uint64_t> num_E = 0;
 static atomic<uint64_t> num_B = 0;
 
 static vector<ninterval_t> E;
-static vector<ninterval_t> N;
-static vector<ninterval_t> S = {Omega_0};
+static vector<ninterval_t> N = N_0;
+static vector<ninterval_t> S;
 
 void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
               C_Polyhedron Nc, vector<C_Polyhedron> Nd, int t) {
@@ -143,6 +143,7 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     }
 
 #endif // USE_CONVEX_HULL
+
     S.clear();
 
     vector<thread> threads;
@@ -191,7 +192,10 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 }
 
 int main() {
-    //tests();
+    // tests();
+    for (const IntervalData &x : Omega_0) {
+        S.push_back(x.interval);
+    }
 
     vector<IntervalData> res = {Omega_0};
 
