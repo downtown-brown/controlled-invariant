@@ -308,7 +308,7 @@ bool can_translate_into(const C_Polyhedron& P,
     C_Polyhedron Ncc = Nc;
     Ncc.intersection_assign(P_over);
 
-    auto Ndd = Nd | views::filter([P](const C_Polyhedron& x){ return intersects(P, x); });
+    auto Ndd = Nd | views::filter([P_over](const C_Polyhedron& x){ return intersects(P_over, x); });
 
     C_Polyhedron U1 = translate_into(P, Ncc);
     vector<C_Polyhedron> U2 = translate_touching(P, Ndd);
