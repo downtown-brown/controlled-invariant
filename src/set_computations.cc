@@ -312,11 +312,8 @@ bool can_translate_into(const C_Polyhedron& P,
 
     C_Polyhedron U1 = translate_into(P, Ncc);
     vector<C_Polyhedron> U2 = translate_touching(P, Ndd);
-    if (U2.empty()) {
-        return !U1.is_empty();
-    } else {
-        return !subset(U1, U2.begin(), U2.end());
-    }
+
+    return !subset(U1, U2.begin(), U2.end());
 }
 
 int64_t rat_approx(double f, int64_t den) {
@@ -329,8 +326,8 @@ C_Polyhedron i2p(ninterval_t x) {
 
     for (int i = 0; i < NDIM; i++) {
         Variable v(i);
-        res.add_constraint(den*v - (rat_approx(x[i].lower(), den) - 1) >= 0);
-        res.add_constraint(den*v - (rat_approx(x[i].upper(), den) + 1) <= 0);
+        res.add_constraint(den*v - (rat_approx(x[i].lower(), den)) >= 0);
+        res.add_constraint(den*v - (rat_approx(x[i].upper(), den)) <= 0);
     }
 
     return res;

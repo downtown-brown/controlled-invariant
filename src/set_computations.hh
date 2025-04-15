@@ -3,6 +3,7 @@
 
 #include "set_types.hh"
 
+#include <ranges>
 
 pair<IntervalData, IntervalData> bisect(IntervalData x);
 
@@ -45,9 +46,7 @@ void merge(vector<ninterval_t>& Omega);
 
 bool comp_intervals(const ninterval_t &A, const ninterval_t &B, int i);
 
-
-template <typename Range>
-vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, Range& N) {
+vector<C_Polyhedron> translate_touching(const C_Polyhedron& C, std::ranges::common_range auto& N) {
     vector<C_Polyhedron> res;
 
     for (const auto& n : N) {
