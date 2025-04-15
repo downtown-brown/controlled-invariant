@@ -39,7 +39,6 @@ static const int NTHREAD = 24;
 static mutex L_mutex;
 static mutex S_mutex;
 static mutex N_mutex;
-static mutex E_mutex;
 static mutex print_mutex;
 static atomic<uint64_t> num_int = 0;
 
@@ -47,7 +46,6 @@ static atomic<uint64_t> num_N = 0;
 static atomic<uint64_t> num_E = 0;
 static atomic<uint64_t> num_B = 0;
 
-static vector<ninterval_t> E;
 static vector<ninterval_t> N;
 static vector<ninterval_t> S = {Omega_0};
 
@@ -81,9 +79,9 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
             S_mutex.unlock();
         } else if (!wider_than(x.interval, epsilon)) {
             num_E++;
-            E_mutex.lock();
-            E.push_back(x.interval);
-            E_mutex.unlock();
+            N_mutex.lock();
+            N.push_back(x.interval);
+            N_mutex.unlock();
         } else {
             num_B++;
             pair<IntervalData, IntervalData> xs = bisect(x);
@@ -130,12 +128,6 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
             Nd.emplace_back(i2p(x));
         }
     }
-    for (const ninterval_t& x : E) {
-        if (intersects(x, hull)) {
-            Nd.emplace_back(i2p(x));
-        }
-    }
-
 #endif // USE_CONVEX_HULL
 
     S.clear();
@@ -150,7 +142,6 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     }
 
     merge(S);
-    merge(E);
     merge(N);
 
     fprint_points(S, DATA_DIR + "s" + to_string(i_approx_iter) + ".txt");
