@@ -85,7 +85,7 @@ bool subset(C_Polyhedron P,
             return false;
         }
 
-        if (!P.is_disjoint_from(*curr)) {
+        if (intersects(P, *curr)) {
             break;
         }
 
@@ -105,7 +105,7 @@ bool subset(C_Polyhedron P,
           continue;
         }
 
-        C_Polyhedron tmp = C_Polyhedron(P);
+        C_Polyhedron tmp = P;
         tmp.add_constraint(c_flip - c.inhomogeneous_term() >= 0);
 
         if (!subset(tmp, curr + 1, end)) {
