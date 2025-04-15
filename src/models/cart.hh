@@ -1,5 +1,5 @@
 static const string DATA_DIR = "data_cart/";
-static const nvec_t epsilon = {1e-1, 1e-1};
+static const nvec_t epsilon = {5e-2, 5e-2};
 
 static interval_t U(-14, 14);
 static ninterval_t Omega_0 = {interval_t(-6, 6),

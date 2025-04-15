@@ -562,8 +562,6 @@ pair<IntervalData, IntervalData> bisect(IntervalData x) {
 
     IntervalData x_l(l);
     IntervalData x_r(r);
-    x.lchild = &x_l;
-    x.rchild = &x_r;
 
     return {x_l, x_r};
 }

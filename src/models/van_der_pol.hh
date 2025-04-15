@@ -2,14 +2,15 @@ static const string DATA_DIR = "data_van_der_pol/";
 static const nvec_t epsilon = {2.5e-2, 2.5e-2};
 
 static interval_t U(-2, 2);
-//static ninterval_t Omega_0 = {interval_t(-6, 6), interval_t(-6, 6)};
-static vector<IntervalData> Omega_0 = {
-    IntervalData({interval_t(-4, -0.5), interval_t(-4, 4)}),
-    IntervalData({interval_t(0.5, 4), interval_t(-4, 4)}),
-    IntervalData({interval_t(-0.5, 0.5), interval_t(-4, -0.5)}),
-    IntervalData({interval_t(-0.5, 0.5), interval_t(0.5, 4)})
+static ninterval_t Omega_0 = {interval_t(-6, 6), interval_t(-6, 6)};
+/*
+  static vector<ninterval_t> Omega_0 = {
+    {{interval_t(-4, -0.5), interval_t(-4, 4)}},
+    {{interval_t(0.5, 4), interval_t(-4, 4)}},
+    {{interval_t(-0.5, 0.5), interval_t(-4, -0.5)}},
+    {{interval_t(-0.5, 0.5), interval_t(0.5, 4)}}
 };
-
+*/
 
 inline C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
     const int64_t A[NDIM][NDIM] = {

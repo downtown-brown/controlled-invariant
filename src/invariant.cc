@@ -11,18 +11,18 @@
 
 void tests(void);
 
-#define USE_CONVEX_HULL 0
+#define USE_CONVEX_HULL 1
 
 //#include "models/artificial_system.hh"
 //#include "models/jet_engine.hh"
-//#include "models/cart.hh"
+#include "models/cart.hh"
 //#include "models/mass_spring_damper.hh"
 //#include "models/cartpole_pendulum.hh"
 //#include "models/van_der_pol.hh"
 //#include "models/cartpole.hh"
 //#include "models/pendubot.hh"
 //#include "models/pendulum_CDC24.hh"
-#include "models/robot_exploration.hh"
+//#include "models/robot_exploration.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
     interval = x;
@@ -32,8 +32,6 @@ IntervalData::IntervalData(ninterval_t x) {
 
     P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Delta);
     P_over = P_u_over + B(x_m, U);
-
-    status = STATUS_UNDETERMINED;
 }
 
 static const int NTHREAD = 24;
@@ -50,8 +48,8 @@ static atomic<uint64_t> num_E = 0;
 static atomic<uint64_t> num_B = 0;
 
 static vector<ninterval_t> E;
-static vector<ninterval_t> N = N_0;
-static vector<ninterval_t> S;
+static vector<ninterval_t> N;
+static vector<ninterval_t> S = {Omega_0};
 
 void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
               C_Polyhedron Nc, vector<C_Polyhedron> Nd, int t) {
@@ -72,26 +70,22 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
         num_t++;
 
         if (!intersects(x.P_over, Nc)) {
-            x.status = STATUS_NOT_IN;
             num_N++;
             N_mutex.lock();
             N.push_back(x.interval);
             N_mutex.unlock();
         } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
-            x.status = STATUS_IN;
             S_mutex.lock();
             S.push_back(x.interval);
             L_next.push_back(x);
             S_mutex.unlock();
         } else if (!wider_than(x.interval, epsilon)) {
-            x.status = STATUS_BOUNDARY;
             num_E++;
             E_mutex.lock();
             E.push_back(x.interval);
             E_mutex.unlock();
         } else {
             num_B++;
-            x.status = STATUS_UNDETERMINED;
             pair<IntervalData, IntervalData> xs = bisect(x);
             L_mutex.lock();
             L.push_back(get<0>(xs));
@@ -193,10 +187,6 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 
 int main() {
     // tests();
-    for (const IntervalData &x : Omega_0) {
-        S.push_back(x.interval);
-    }
-
     vector<IntervalData> res = {Omega_0};
 
     do {
