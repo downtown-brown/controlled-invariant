@@ -33,18 +33,21 @@ vector<C_Polyhedron> regiondiff(C_Polyhedron P,
     }
 
     for (const Constraint& c : curr->constraints()) {
-        C_Polyhedron tmp = C_Polyhedron(P);
 
-        Linear_Expression con_new;
+        Linear_Expression c_flip;
         for (int i = 0; i < NDIM; i++) {
             Variable v(i);
-            con_new -= c.coefficient(v)*v;
+            c_flip -= c.coefficient(v)*v;
         }
-        tmp.add_constraint(con_new - c.inhomogeneous_term() >= 0);
 
-        if (tmp.affine_dimension() < P.affine_dimension()) {
+        /* This condition means the flipped constraint will not affect P */
+        if (P.relation_with(Constraint(c_flip - c.inhomogeneous_term() > 0)) == Poly_Con_Relation::is_disjoint()) {
             continue;
         }
+
+        C_Polyhedron tmp = C_Polyhedron(P);
+        tmp.add_constraint(c_flip - c.inhomogeneous_term() >= 0);
+
         if (curr < end - 1) {
             vector<C_Polyhedron> tmp2 = regiondiff(tmp, curr + 1, end);
             res.insert(res.end(), tmp2.begin(), tmp2.end());
@@ -237,14 +240,7 @@ C_Polyhedron operator+(const C_Polyhedron &a, const C_Polyhedron &b) {
 
 bool has_separating_plane(const C_Polyhedron& A, const C_Polyhedron& B) {
     for (const Constraint& a : A.constraints()) {
-        bool sep = true;
-        for (const Generator& b : B.generators()) {
-            if (Scalar_Products::sign(a, b) >= 0) {
-                sep = false;
-                break;
-            }
-        }
-        if (sep) {
+        if (B.relation_with(a) == Poly_Con_Relation::is_disjoint()) {
             return true;
         }
     }

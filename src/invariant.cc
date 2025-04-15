@@ -11,11 +11,9 @@
 
 void tests(void);
 
-#define USE_CONVEX_HULL 0
-
 //#include "models/artificial_system.hh"
-//#include "models/jet_engine.hh"
-#include "models/cart.hh"
+#include "models/jet_engine.hh"
+//#include "models/cart.hh"
 //#include "models/mass_spring_damper.hh"
 //#include "models/cartpole_pendulum.hh"
 //#include "models/van_der_pol.hh"
@@ -107,17 +105,6 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     i_approx_iter++;
     num_int = num_N = num_E = num_B = 0;
 
-#if USE_CONVEX_HULL
-    vector<C_Polyhedron> Omega_p(Omega.size());
-    int i = 0;
-    for (const IntervalData& O : Omega) {
-        Omega_p[i] = O.poly;
-        i++;
-    }
-
-    C_Polyhedron Nc = convexhull(Omega_p);
-    vector<C_Polyhedron> Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
-#else
     ninterval_t hull = intervalhull(S);
     C_Polyhedron Nc = i2p(hull);
 
@@ -128,7 +115,6 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
             Nd.emplace_back(i2p(x));
         }
     }
-#endif // USE_CONVEX_HULL
 
     S.clear();
 
