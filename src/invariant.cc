@@ -77,17 +77,20 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
         num_int++;
 
         if (!intersects(x.P_over, Nc)) {
-            std::scoped_lock lock(N_mutex);
             num_N++;
+            N_mutex.lock();
             N.push_back(x.interval);
+            N_mutex.unlock();
         } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
-            std::scoped_lock lock(S_mutex);
+            S_mutex.lock();
             S.push_back(x.interval);
             L_next.push_back(x);
+            S_mutex.unlock();
         } else if (!wider_than(x.interval, epsilon)) {
-            std::scoped_lock lock(N_mutex);
             num_E++;
+            N_mutex.lock();
             N.push_back(x.interval);
+            N_mutex.unlock();
         } else {
             num_B++;
             pair<IntervalData, IntervalData> xs = bisect(x);
@@ -98,8 +101,9 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
         }
 
         if (num_int % 1000 == 0) {
-            std::scoped_lock lock(print_mutex);
+            print_mutex.lock();
             cout << "num_int: " << setw(20) << num_int << '\r' << flush;
+            print_mutex.unlock();
         }
     }
 }
