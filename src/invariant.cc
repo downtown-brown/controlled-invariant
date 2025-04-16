@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <mutex>
 #include <atomic>
 #include <ppl.hh>
@@ -33,7 +34,7 @@ IntervalData::IntervalData(ninterval_t x) {
     P_over = P_u_over + B(x_m, U);
 }
 
-static const int NTHREAD = 24;
+static const unsigned int NTHREAD = 24;
 
 static mutex L_mutex;
 static mutex S_mutex;
@@ -48,39 +49,45 @@ static atomic<uint64_t> num_B = 0;
 static vector<ninterval_t> N = N_0;
 static vector<ninterval_t> S;
 
-void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
-              C_Polyhedron Nc, vector<C_Polyhedron> Nd, int t) {
+static atomic<uint64_t> n_waiting;
 
-    int num_t = 0;
-    while (1) {
+void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
+              const C_Polyhedron& Nc, const vector<C_Polyhedron>& Nd, int t) {
+    bool waiting = false;
+    while (n_waiting < NTHREAD) {
         L_mutex.lock();
         if (L.empty()) {
             L_mutex.unlock();
-            printf("thread %d considered %d intervals\n", t, num_t);
-            return;
+            if (!waiting) {
+                waiting = true;
+                n_waiting++;
+            }
+            continue;
         }
+
+        if (waiting) {
+            waiting = false;
+            n_waiting--;
+        }
+
         IntervalData x = L.back();
         L.pop_back();
         L_mutex.unlock();
 
         num_int++;
-        num_t++;
 
         if (!intersects(x.P_over, Nc)) {
+            std::scoped_lock lock(N_mutex);
             num_N++;
-            N_mutex.lock();
             N.push_back(x.interval);
-            N_mutex.unlock();
         } else if (can_translate_into(x.P_u_over, x.P_over, Nc, Nd)) {
-            S_mutex.lock();
+            std::scoped_lock lock(S_mutex);
             S.push_back(x.interval);
             L_next.push_back(x);
-            S_mutex.unlock();
         } else if (!wider_than(x.interval, epsilon)) {
+            std::scoped_lock lock(N_mutex);
             num_E++;
-            N_mutex.lock();
             N.push_back(x.interval);
-            N_mutex.unlock();
         } else {
             num_B++;
             pair<IntervalData, IntervalData> xs = bisect(x);
@@ -91,9 +98,8 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
         }
 
         if (num_int % 1000 == 0) {
-            print_mutex.lock();
+            std::scoped_lock lock(print_mutex);
             cout << "num_int: " << setw(20) << num_int << '\r' << flush;
-            print_mutex.unlock();
         }
     }
 }
@@ -119,12 +125,13 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
 
     S.clear();
 
+    n_waiting = 0;
     vector<thread> threads;
-    for (int t = 0; t < NTHREAD; t++) {
+    for (uint64_t t = 0; t < NTHREAD; t++) {
         threads.emplace_back(make_threadable(I_worker), ref(L), ref(L_next), Nc, Nd, t);
     }
 
-    for (int t = 0; t < NTHREAD; t++) {
+    for (uint64_t t = 0; t < NTHREAD; t++) {
         threads[t].join();
     }
 
