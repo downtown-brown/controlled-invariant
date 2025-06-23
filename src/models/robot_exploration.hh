@@ -3,24 +3,27 @@
 #include <ppl.hh>
 
 static const string DATA_DIR = "data_exploration/";
-static const nvec_t epsilon = {5e-1, 5e-1, M_PI/32};
+static const nvec_t epsilon = {5e-2, 5e-2, M_PI/32};
 
 static ninterval_t U = {interval_t(-2, 2), interval_t(-1, 1),
                         interval_t(0, 0)};
 
 
 static vector<IntervalData> Omega_0 = {
-    IntervalData({interval_t(-10, -8), interval_t(-10, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(-8, -4), interval_t(-10, -4), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(-8, -4), interval_t(4, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(-4, 4), interval_t(-10, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(4, 10), interval_t(-10, -4), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(4, 8), interval_t(4, 10), interval_t(-M_PI, M_PI)}),
-    IntervalData({interval_t(8, 10), interval_t(-10, 10), interval_t(-M_PI, M_PI)})};
+    IntervalData({interval_t(-4, -1), interval_t(-2, 2), interval_t(-M_PI, M_PI)}),
+    IntervalData({interval_t(1, 4), interval_t(-2, 2), interval_t(-M_PI, M_PI)}),
+    IntervalData({interval_t(-2, 2), interval_t(-4, -2), interval_t(-M_PI, M_PI)}),
+    IntervalData({interval_t(-2, 2), interval_t(2, 4), interval_t(-M_PI, M_PI)}),
+    IntervalData({interval_t(-1, 1), interval_t(1, 2), interval_t(-M_PI, M_PI)}),
+    IntervalData({interval_t(-1, 1), interval_t(-2, -1), interval_t(-M_PI, M_PI)}),
+};
 
 static vector<ninterval_t> N_0 = {
-    {interval_t(-8, -4), interval_t(-4, 4), interval_t(-M_PI, M_PI)},
-    {interval_t(4, 8), interval_t(-4, 4), interval_t(-M_PI, M_PI)}
+    {interval_t(-4, -2), interval_t(-4, -2), interval_t(-M_PI, M_PI)},
+    {interval_t(-4, -2), interval_t(2, 4), interval_t(-M_PI, M_PI)},
+    {interval_t(2, 4), interval_t(-4, -2), interval_t(-M_PI, M_PI)},
+    {interval_t(2, 4), interval_t(2, 4), interval_t(-M_PI, M_PI)},
+    {interval_t(-1, 1), interval_t(-1, 1), interval_t(-M_PI, M_PI)},
 };
 
 

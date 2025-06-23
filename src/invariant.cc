@@ -19,10 +19,11 @@ void tests(void);
 //#include "models/mass_spring_damper.hh"
 //#include "models/cartpole_pendulum.hh"
 //#include "models/van_der_pol.hh"
-//#include "models/cartpole.hh"
+#include "models/cartpole.hh"
 //#include "models/pendubot.hh"
+//#include "models/cstr.hh"
 //#include "models/pendulum_CDC24.hh"
-#include "models/robot_exploration.hh"
+//#include "models/robot_exploration.hh"
 
 IntervalData::IntervalData(ninterval_t x) {
     interval = x;
@@ -30,7 +31,7 @@ IntervalData::IntervalData(ninterval_t x) {
 
     poly = i2p(interval);
 
-    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Delta);
+    P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Psi(interval, x_m) + Delta);
     P_over = P_u_over + B(x_m, U);
 }
 
@@ -46,10 +47,11 @@ static atomic<uint64_t> num_N = 0;
 static atomic<uint64_t> num_E = 0;
 static atomic<uint64_t> num_B = 0;
 
-static vector<ninterval_t> N = N_0;
+static vector<ninterval_t> N;
 static vector<ninterval_t> S;
 
 static atomic<uint64_t> n_waiting;
+static atomic i_total = 0;
 
 void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
               const C_Polyhedron& Nc, const vector<C_Polyhedron>& Nd, int t) {
@@ -75,6 +77,7 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
         L_mutex.unlock();
 
         num_int++;
+        i_total++;
 
         if (!intersects(x.P_over, Nc)) {
             num_N++;
@@ -88,9 +91,10 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
             S_mutex.unlock();
         } else if (!wider_than(x.interval, epsilon)) {
             num_E++;
-            N_mutex.lock();
-            N.push_back(x.interval);
-            N_mutex.unlock();
+            S_mutex.lock();
+            S.push_back(x.interval);
+            L_next.push_back(x);
+            S_mutex.unlock();
         } else {
             num_B++;
             pair<IntervalData, IntervalData> xs = bisect(x);
@@ -176,17 +180,15 @@ vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
 
 int main() {
     // tests();
-    vector<IntervalData> res = Omega_0;
+    vector<IntervalData> res = {Omega_0};
 
-    for (auto &x : Omega_0) {
-        S.push_back(x.interval);
-    }
-
+    S = {Omega_0};
     do {
         res = I_approx(res);
     } while (num_N || num_E);
 
-    cout << "Computed invariant set.\n\n";
+    cout << "Computed invariant set." << endl;
+    cout << i_total << " total intervals" << endl;
 
     return 0;
 }

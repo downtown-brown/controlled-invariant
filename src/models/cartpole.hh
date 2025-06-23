@@ -2,15 +2,17 @@
 #include <math.h>
 
 static const string DATA_DIR = "data_cartpole/";
-static const nvec_t epsilon = {1e-1, 1e-1, 1e-1, 1e-1};
+static const nvec_t epsilon = {5e-2, M_PI/8, 1e-1, M_PI/16};
 
 static interval_t U(-2, 2);
 static ninterval_t Omega_0 = {
     interval_t(-.5, .5), interval_t(-0.75 * M_PI, 0.75 * M_PI), interval_t(-1, 1),
-    interval_t(-1.5 * M_PI, 1.5 * M_PI)
+            interval_t(-1.5 * M_PI, 1.5 * M_PI)
 };
 
-inline C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
+static vector<ninterval_t> N_0;
+
+inline C_Polyhedron A(const nvec_t& x_m, const C_Polyhedron& P) {
     const int64_t A[NDIM][NDIM] = {
         {25000,     0,  2500,     0},
         {    0, 25000,     0,  2500},
@@ -27,7 +29,7 @@ inline C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
     return res;
 }
 
-inline C_Polyhedron B(nvec_t x_m, interval_t U) {
+inline C_Polyhedron B(const nvec_t& x_m, const interval_t& U) {
     const int64_t B[NDIM] = {
         0,
         0,
@@ -49,7 +51,7 @@ inline C_Polyhedron B(nvec_t x_m, interval_t U) {
     return res;
 }
 
-inline ninterval_t Phi(ninterval_t x, nvec_t x_m) {
+inline ninterval_t Phi(const ninterval_t& x, const nvec_t& x_m) {
   return {
     interval_t(0, 0),
     interval_t(0, 0),
@@ -58,7 +60,7 @@ inline ninterval_t Phi(ninterval_t x, nvec_t x_m) {
   };
 }
 
-inline ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {
+inline ninterval_t Psi(const ninterval_t& x, const nvec_t& x_m) {
   return {
     interval_t(0, 0),
     interval_t(0, 0),

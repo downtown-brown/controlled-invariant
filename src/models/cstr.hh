@@ -2,7 +2,7 @@
 #include <math.h>
 
 static const string DATA_DIR = "data_cartpole/";
-static const nvec_t epsilon = {0.1, 0.1, 2, 5};
+static const nvec_t epsilon = {0.2, 0.2, 5, 10};
 
 static ninterval_t U = {interval_t(5, 35), interval_t(-8500, 0), interval_t(0, 0), interval_t(0, 0)};
 static ninterval_t Omega_0 = {interval_t(0, 5), interval_t(0, 5), interval_t(50, 150), interval_t(0, 150)};
