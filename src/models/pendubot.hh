@@ -5,12 +5,11 @@ static const string DATA_DIR = "data_pendubot/";
 static const nvec_t epsilon = {1e-1, 1e-1, 1e-1, 1e-1};
 
 static interval_t U(-2, 2);
-static ninterval_t Omega_0 = {
-    interval_t(-1, 1),
-    interval_t(-1, 1),
-    interval_t(-1, 1),
-    interval_t(-1, 1)
+static vector<IntervalData> Omega_0 = {
+    IntervalData({interval_t(-1, 1), interval_t(-1, 1), interval_t(-1, 1), interval_t(-1, 1)})
 };
+
+static vector<ninterval_t> N_0;
 
 inline C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
     return P;
