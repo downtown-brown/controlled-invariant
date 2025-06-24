@@ -91,7 +91,6 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
             num_E++;
             std::scoped_lock lock(S_mutex);
             S.push_back(x.interval);
-            L_next.push_back(x);
         } else {
             num_B++;
             pair<IntervalData, IntervalData> xs = bisect(x);
