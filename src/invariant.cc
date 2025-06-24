@@ -19,8 +19,8 @@ void tests(void);
 //#include "models/mass_spring_damper.hh"
 //#include "models/cartpole_pendulum.hh"
 //#include "models/van_der_pol.hh"
-#include "models/cartpole.hh"
-//#include "models/pendubot.hh"
+//include "models/cartpole.hh"
+#include "models/pendubot.hh"
 //#include "models/cstr.hh"
 //#include "models/pendulum_CDC24.hh"
 //#include "models/robot_exploration.hh"
@@ -29,7 +29,7 @@ IntervalData::IntervalData(ninterval_t x) {
     interval = x;
     nvec_t x_m = median(interval);
 
-    poly = i2p(interval);
+    C_Polyhedron poly = i2p(interval);
 
     P_u_over = A(x_m, poly) + i2p(Phi(interval, x_m) + Psi(interval, x_m) + Delta);
     P_over = P_u_over + B(x_m, U);
@@ -91,6 +91,7 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
             num_E++;
             std::scoped_lock lock(S_mutex);
             S.push_back(x.interval);
+            L_next.push_back(x);
         } else {
             num_B++;
             pair<IntervalData, IntervalData> xs = bisect(x);
@@ -146,30 +147,6 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega) {
     cout << "N: " << num_N << ", S: " << S.size() << ", E: " << num_E << ", B: " << num_B << endl;
 
     return L_next;
-}
-
-vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
-    vector<vector<C_Polyhedron>> Uc;
-    vector<IntervalData> L = Omega;
-
-    vector<C_Polyhedron> Omega_p(Omega.size());
-    int i = 0;
-    for (const IntervalData& O : Omega) {
-        Omega_p[i] = O.poly;
-        i++;
-    }
-
-    C_Polyhedron Nc = convexhull(Omega_p);
-    vector<C_Polyhedron> Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
-
-    while (!L.empty()) {
-        IntervalData x = L.back();
-        L.pop_back();
-
-        Uc.push_back(translate_into(x.P_u_over, x.P_over, Nc, Nd));
-    }
-
-    return Uc;
 }
 
 int main() {

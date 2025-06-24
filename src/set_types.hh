@@ -23,7 +23,6 @@ using nvec_t = array<double, NDIM>;
 class IntervalData {
 public:
     ninterval_t interval;
-    C_Polyhedron poly;
     C_Polyhedron P_u_over;
     C_Polyhedron P_over;
     IntervalData(ninterval_t x);

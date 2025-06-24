@@ -47,7 +47,7 @@ inline ninterval_t Phi(ninterval_t x, nvec_t x_m) {
   };
 }
 
-inline ninterval_t Psi(ninterval_t x, nvec_t x_m, interval_t U) {
+inline ninterval_t Psi(ninterval_t x, nvec_t x_m) {
   return {
     interval_t(0, 0),
     U*0.1*(-10.096*(x[2]*x[2] - x_m[2]*x_m[2])),
