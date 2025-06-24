@@ -486,8 +486,8 @@ pair<IntervalData, IntervalData> bisect(IntervalData x) {
     l[max_dim] = get<0>(tmp);
     r[max_dim] = get<1>(tmp);
 
-    IntervalData x_l(l);
-    IntervalData x_r(r);
+    IntervalData x_l(l, x.node);
+    IntervalData x_r(r, x.node);
 
     return {x_l, x_r};
 }

@@ -5,7 +5,7 @@
 #ifndef SET_TYPES_HH
 #define SET_TYPES_HH
 
-const int NDIM = 3;
+const int NDIM = 2;
 
 using namespace std;
 using namespace Parma_Polyhedra_Library;
@@ -22,11 +22,12 @@ using nvec_t = array<double, NDIM>;
 
 class IntervalData {
 public:
+    int node;
     ninterval_t interval;
     C_Polyhedron poly;
     C_Polyhedron P_u_over;
     C_Polyhedron P_over;
-    IntervalData(ninterval_t x);
+    IntervalData(ninterval_t x, int node);
 };
 
 #endif
