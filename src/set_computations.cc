@@ -124,11 +124,9 @@ bool subset(C_Polyhedron P,
 C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
     C_Polyhedron res(NDIM);
     for (const Constraint& n : N.constraints()) {
-        GMP_Integer min = 0;
-        GMP_Integer mind = 1;
-        GMP_Integer d;
+        Coefficient min = 0, mind = 1, d;
         for (const Generator& c : C.generators()) {
-            GMP_Integer tmp = 0;
+            Coefficient tmp = 0;
             for (int i = 0; i < NDIM; i++) {
                 tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
             }
@@ -155,14 +153,10 @@ C_Polyhedron translate_into(const C_Polyhedron& C, const C_Polyhedron& N) {
 
 C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     C_Polyhedron res(NDIM);
-    GMP_Integer max;
-    GMP_Integer maxd;
-    GMP_Integer d;
     for (const Constraint& n : N.constraints()) {
-        max = 0;
-        maxd = 1;
+        Coefficient max = 0, maxd = 1, d;
         for (const Generator& c : C.generators()) {
-            GMP_Integer tmp = 0;
+            Coefficient tmp = 0;
             for (int i = 0; i < NDIM; i++) {
                 tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
             }
@@ -185,10 +179,9 @@ C_Polyhedron translate_touching(const C_Polyhedron& C, const C_Polyhedron& N) {
     }
 
     for (const Constraint& c : C.constraints()) {
-        max = 0;
-        maxd = 1;
+        Coefficient max = 0, maxd = 1, d;
         for (const Generator& n : N.generators()) {
-            GMP_Integer tmp = 0;
+            Coefficient tmp = 0;
             for (int i = 0; i < NDIM; i++) {
                 tmp += n.coefficient(Variable(i))*c.coefficient(Variable(i));
             }
