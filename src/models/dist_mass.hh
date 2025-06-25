@@ -1,9 +1,9 @@
 static const string DATA_DIR = "data_dist_mass/";
-static const nvec_t epsilon = {1e-2, 1e-2};
+static const nvec_t epsilon = {1e-3, 1e-3};
 
 static interval_t U(-6, 6);
-static ninterval_t Omega_0 = {interval_t(-1, 1),
-                              interval_t(-2, 2)};
+static ninterval_t Omega_0 = {interval_t(-0.25, 0.25),
+                              interval_t(-0.5, 0.5)};
 
 C_Polyhedron A(nvec_t x_m, C_Polyhedron P) {
     const int64_t A[NDIM][NDIM] = {{10, 1},
@@ -49,10 +49,10 @@ ninterval_t Phi_n(ninterval_t x, nvec_t x_m, ninterval_t delta_nm) {
 }
 
 ninterval_t Phi_i(ninterval_t x, nvec_t x_m,
-                  ninterval_t delta_nm, ninterval_t delta_np) {
+                  ninterval_t delta_im, ninterval_t delta_ip) {
   return {
     interval_t(0, 0),
-    -0.8 * (pow(x[0] - delta_nm[0], 3) - pow(delta_np[0] - x[0], 3))
-    - 1. / 3. * (pow(x[1] - delta_nm[1], 2) - pow(delta_np[1] - x[1], 2))
+    -0.8 * (pow(x[0] - delta_im[0], 3) - pow(delta_ip[0] - x[0], 3))
+    - 1. / 3. * (pow(x[1] - delta_im[1], 2) - pow(delta_ip[1] - x[1], 2))
   };
 }

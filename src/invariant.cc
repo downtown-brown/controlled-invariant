@@ -25,7 +25,7 @@ void tests(void);
 //#include "models/robot_exploration.hh"
 #include "models/dist_mass.hh"
 
-static const int n = 3;
+static const int n = 4;
 
 vector<ninterval_t> delta(n);
 
@@ -105,10 +105,9 @@ void I_worker(vector<IntervalData> &L, vector<IntervalData> &L_next,
             S_mutex.unlock();
         } else if (!wider_than(x.interval, epsilon)) {
             num_E++;
-            S_mutex.lock();
-            E[node].push_back(x.interval);
-            L_next.push_back(x);
-            S_mutex.unlock();
+            N_mutex.lock();
+            N[node].push_back(x.interval);
+            N_mutex.unlock();
         } else {
             num_B++;
             pair<IntervalData, IntervalData> xs = bisect(x);
@@ -132,10 +131,8 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega, int node) {
     vector<IntervalData> L_next;
 
     i_approx_iter++;
-    num_int = num_N = num_E = num_B = 0;
 
     S[node].insert(S[node].end(), E[node].begin(), E[node].end());
-
     ninterval_t hull = intervalhull(S[node]);
     C_Polyhedron Nc = i2p(hull);
 
@@ -148,6 +145,7 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega, int node) {
     }
 
     S[node].clear();
+    E[node].clear();
 
     n_waiting = 0;
     vector<thread> threads;
@@ -159,39 +157,20 @@ vector<IntervalData> I_approx(const vector<IntervalData>& Omega, int node) {
         threads[t].join();
     }
 
+    delta[node] = intervalhull(S[node]);
+    print_points(delta[node], cout);
+
     merge(S[node]);
     merge(N[node]);
 
-    fprint_points(S[node], DATA_DIR + "s" + to_string(i_approx_iter) + to_string(node) + ".txt");
+    if (S[node].size() != 0) {
+      fprint_points(S[node], DATA_DIR + "s" + to_string(i_approx_iter) + ".txt");
+    }
 
     cout << "Iteration " << i_approx_iter << ", considered " << num_int << " intervals." << endl;
     cout << "N: " << num_N << ", S: " << S[node].size() << ", E: " << num_E << ", B: " << num_B << endl;
 
     return L_next;
-}
-
-vector<vector<C_Polyhedron>> U_approx(vector<IntervalData> Omega) {
-    vector<vector<C_Polyhedron>> Uc;
-    vector<IntervalData> L = Omega;
-
-    vector<C_Polyhedron> Omega_p(Omega.size());
-    int i = 0;
-    for (const IntervalData& O : Omega) {
-        Omega_p[i] = O.poly;
-        i++;
-    }
-
-    C_Polyhedron Nc = convexhull(Omega_p);
-    vector<C_Polyhedron> Nd = regiondiff(Nc, Omega_p.begin(), Omega_p.end());
-
-    while (!L.empty()) {
-        IntervalData x = L.back();
-        L.pop_back();
-
-        Uc.push_back(translate_into(x.P_u_over, x.P_over, Nc, Nd));
-    }
-
-    return Uc;
 }
 
 int main() {
@@ -201,16 +180,15 @@ int main() {
     for (int i = 0; i < n; i++) {
         res[i].emplace_back(Omega_0, i);
         S[i].push_back(Omega_0);
+        delta[i] = Omega_0;
     }
 
+
     do {
+        num_int = num_N = num_E = num_B = 0;
         for (int i = 0; i < n; i++) {
             res[i] = I_approx(res[i], i);
-            delta[i] = intervalhull(S[i]);
         }
-
-        //delta_2 = intervalhull(S[1]);
-        //delta_nm1 = intervalhull(S[0]);
     } while (num_N || num_E);
 
     cout << "Computed invariant set.\n\n";
